@@ -12,7 +12,7 @@ namespace SvR.ContentPrep.Models
         public string? MsiProductVersion { get; set; }
 
         public string? MsiPackageCode { get; set; }
-        
+
         public string? MsiPublisher { get; set; }
 
         public string? MsiUpgradeCode { get; set; }

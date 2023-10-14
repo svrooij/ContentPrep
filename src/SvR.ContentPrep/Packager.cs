@@ -42,7 +42,7 @@ namespace SvR.ContentPrep
 
                 logger.LogInformation("Compressing the source folder {Folder} to {EncryptedPackageLocation}", folder, encryptedPackageLocation);
                 await Zipper.ZipDirectory(folder, encryptedPackageLocation, false, false);
-                
+
                 long setupFileSize = new FileInfo(encryptedPackageLocation).Length;
                 logger.LogInformation("Generating application info");
                 // TODO: Add support for reading info from MSI files, but has to be cross platform
@@ -108,7 +108,7 @@ namespace SvR.ContentPrep
                 // Read metadata file
                 var metadataFile = Path.Combine(tempFolder, "IntuneWinPackage", "Metadata", "Detection.xml");
                 logger.LogDebug("Reading metadata file {MetadataFile}", metadataFile);
-                
+
                 ApplicationInfo? applicationInfo = null;
                 using (FileStream metadataStream = new FileStream(metadataFile, FileMode.Open, FileAccess.Read, FileShare.None, bufferSize: 4096, useAsync: true))
                 using (StreamReader metadataCopy = new StreamReader(metadataStream))
@@ -122,7 +122,7 @@ namespace SvR.ContentPrep
 
                 if (applicationInfo == null || applicationInfo.EncryptionInfo == null)
                     throw new InvalidDataException(string.Format(CultureInfo.InvariantCulture, "Could not read metadata file {0}", metadataFile));
-                
+
                 // Decrypt file
                 var encryptedPackage = Path.Combine(tempFolder, "IntuneWinPackage", "Contents", applicationInfo.FileName);
                 logger.LogDebug("Decrypting {EncryptedPackage} to {OutputFolder}", encryptedPackage, outputFolder);
@@ -136,8 +136,9 @@ namespace SvR.ContentPrep
                 }
 
                 Directory.Delete(tempFolder, true);
-                
-            } catch (Exception ex)
+
+            }
+            catch (Exception ex)
             {
                 logger.LogWarning(ex, "Error unpacking intunewin at {PackageFile} to {OutputFolder}", packageFile, outputFolder);
                 throw;

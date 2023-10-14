@@ -1,0 +1,11 @@
+blank_issues_enabled: true
+contact_links:
+  - name: I have a question about ContentPrep
+    url: https://github.com/svrooij/ContentPrep/discussions/categories/q-a
+    about: "Use the Q & A section in discussions to ask your questions"
+  - name: Feature requests
+    url: https://github.com/svrooij/ContentPrep/discussions/categories/ideas
+    about: Discuss new ideas, improvements and feature requests
+  - name: Blog
+    url: https://svrooij.io
+    about: Check my blog for more interesting posts

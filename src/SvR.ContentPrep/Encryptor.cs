@@ -20,7 +20,7 @@ namespace SvR.ContentPrep
             string fileWithGuid = Path.Combine(Path.GetDirectoryName(file), Guid.NewGuid().ToString());
             cancellationToken.ThrowIfCancellationRequested();
             byte[] encryptedFileHash = await EncryptFileWithIVAsync(file, fileWithGuid, encryptionKey, hmacKey, iv, cancellationToken);
-            
+
             byte[]? filehash = null;
             using (SHA256 hasher = SHA256.Create())
             // using (FileStream fileStream = File.Open(file, FileMode.Open, FileAccess.Read, FileShare.None))
@@ -132,7 +132,7 @@ namespace SvR.ContentPrep
                 byte[] buffer = new byte[offset];
                 await inputStream.ReadAsync(buffer, 0, offset, cancellationToken);
                 byte[] hash = await hmac.ComputeHashAsync(inputStream, cancellationToken);
-                
+
                 if (!buffer.CompareHashes(hash))
                 {
                     throw new InvalidDataException("Hashes do not match");
