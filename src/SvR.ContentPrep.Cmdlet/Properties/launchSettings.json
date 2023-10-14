@@ -1,0 +1,9 @@
+{
+  "profiles": {
+    "SvR.ContentPrep.Cmdlet": {
+      "executablePath": "C:\\Program Files\\PowerShell\\7\\pwsh.exe",
+      "commandName": "Executable",
+      "commandLineArgs": "-noexit -command &{ Import-Module .\\SvR.ContentPrep.Cmdlet.dll -Verbose}"
+    }
+  }
+}
