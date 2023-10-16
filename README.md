@@ -2,6 +2,8 @@
 
 I felt there was a need for an open-source version of the [Microsoft content preparation tool](https://github.com/microsoft/Microsoft-Win32-Content-Prep-Tool), mainly because I wanted to be able to use in [WingetIntune](https://github.com/svrooij/WingetIntune) without having to rely on a closed-source tool that had a dependency upon Windows. I want to run this in the cloud and using closed source executable was not really an option.
 
+> **Warning**: This is not a replacement for the Microsoft tool, it is a re-implementation of the tool. It is not feature complete and it might not work for your use case. If you need a tool that works, use the Microsoft tool. This library is provided as-is, without any warranty or support.
+
 ## What does it do?
 
 It allows you to create packages that can be uploaded to Intune and it allows you to decrypt those packages.

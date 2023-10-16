@@ -3,9 +3,18 @@ using System.Management.Automation;
 
 namespace SvR.ContentPrep.Cmdlet
 {
-    [Cmdlet(VerbsCommon.New, "IntuneWinPackage")]
+    /// <summary>
+    /// Create a new IntuneWin package
+    /// </summary>
+    /// <remarks>
+    /// This is a re-implementation of the IntuneWinAppUtil.exe tool, it's not feature complete use at your own risk.
+    /// </remarks>
+    [Cmdlet(VerbsCommon.New, "IntuneWinPackage", HelpUri = "https://github.com/svrooij/ContentPrep/blob/main/src/SvR.ContentPrep.Cmdlet/README.md")]
     public class NewIntuneWinPackageCommand : PSCmdlet
     {
+        /// <summary>
+        /// Directory containing all the installation files
+        /// </summary>
         [Parameter(
             Mandatory = true,
             Position = 0,
@@ -14,6 +23,9 @@ namespace SvR.ContentPrep.Cmdlet
             HelpMessage = "The directory containing all the installation files")]
         public string SourcePath { get; set; }
 
+        /// <summary>
+        /// The main setupfile in the source directory
+        /// </summary>
         [Parameter(
             Mandatory = true,
             Position = 1,
@@ -22,6 +34,9 @@ namespace SvR.ContentPrep.Cmdlet
             HelpMessage = "The main setupfile in the source directory")]
         public string SetupFile { get; set; }
 
+        /// <summary>
+        /// Destination folder
+        /// </summary>
         [Parameter(
             Mandatory = true,
             Position = 2,
@@ -31,8 +46,11 @@ namespace SvR.ContentPrep.Cmdlet
         public string DestinationPath { get; set; }
 
         private Packager packager;
-        private PowerShellLogger<Packager>? logger;
+        private PowerShellLogger<Packager> logger;
 
+        /// <summary>
+        /// 
+        /// </summary>
         protected override void BeginProcessing()
         {
             WriteVerbose("Begin creating package");
@@ -40,6 +58,9 @@ namespace SvR.ContentPrep.Cmdlet
             packager = new Packager(logger);
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
         protected override void ProcessRecord()
         {
             try
@@ -51,8 +72,9 @@ namespace SvR.ContentPrep.Cmdlet
                     Directory.CreateDirectory(DestinationPath);
                 }
                 WriteVerbose($"Trying to create package for {setupFile}");
-                ThreadAffinitiveSynchronizationContext.RunSynchronized(() => packager.CreatePackage(SourcePath, setupFile, DestinationPath));
-                //packager.CreatePackage(SourcePath, setupFile, DestinationPath).GetAwaiter().GetResult();
+                ThreadAffinitiveSynchronizationContext.RunSynchronized(() => 
+                    packager.CreatePackage(SourcePath, setupFile, DestinationPath)
+                );
             }
             catch (System.Exception ex)
             {
@@ -60,6 +82,9 @@ namespace SvR.ContentPrep.Cmdlet
             }
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
         protected override void EndProcessing()
         {
             packager = null;

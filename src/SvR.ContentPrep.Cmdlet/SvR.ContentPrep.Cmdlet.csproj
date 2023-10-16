@@ -2,8 +2,9 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
-    <AssemblyName>SvR.ContentPrep.Cmdlet</AssemblyName>
+    <AssemblyName>SvRooij.ContentPrep.Cmdlet</AssemblyName>
 	  <LangVersion>8.0</LangVersion>
+	  <GenerateDocumentationFile>True</GenerateDocumentationFile>
 	  <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
   </PropertyGroup>
 
@@ -16,10 +17,20 @@
     <PackageReference Include="PowerShellStandard.Library" Version="5.1.0-preview-06">
       <PrivateAssets>All</PrivateAssets>
     </PackageReference>
+    <PackageReference Include="XmlDoc2CmdletDoc" Version="0.3.0">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\SvR.ContentPrep\SvR.ContentPrep.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="SvRooij.ContentPrep.Cmdlet.psd1">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
 </Project>

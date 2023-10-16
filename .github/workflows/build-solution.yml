@@ -1,0 +1,38 @@
+name: Publish to PowerShell Gallery
+on:
+  push:
+    branches:
+      - main
+      - develop
+jobs:
+  build-and-publish:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: '6.0.x'
+      - name: Restore dependencies
+        run: dotnet restore
+      - name: Build PowerShell module
+        run: dotnet build .\src\SvR.ContentPrep.Cmdlet -c Release -o .\dist\SvRooij.ContentPrep.Cmdlet  
+      - name: Analyses
+        shell: pwsh
+        run: |
+          Import-Module .\dist\SvRooij.ContentPrep.Cmdlet\SvR.ContentPrep.Cmdlet.psd1
+          Install-Module -Name PSScriptAnalyzer
+          Invoke-ScriptAnalyzer -Path .\dist\SvRooij.ContentPrep.Cmdlet\SvR.ContentPrep.Cmdlet.psd1
+    #   - name: Publish to PowerShell Gallery
+    #     shell: pwsh
+    #     run: |
+    #       Import-Module .\dist\SvRooij.ContentPrep.Cmdlet\SvR.ContentPrep.Cmdlet.psd1
+    #       Install-Module -Name PowerShellGet -Force -SkipPublisherCheck
+    #       Publish-Module -Path .\dist\SvRooij.ContentPrep.Cmdlet -NuGetApiKey ${{ secrets.PSGALLERY_API_KEY }} -Verbose
+
+      # - name: Publish to PowerShell Gallery
+      #   uses: PowerShell/powershellgallery-publisher@0.1.4
+      #   with:
+      #     PowerShellGalleryApiKey: ${{ secrets.PSGALLERY_API_KEY }}
+      #     Path: './path/to/module'

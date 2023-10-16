@@ -152,9 +152,9 @@ namespace SvR.ContentPrep
         }
     }
 
-    public static class HashAlgorithmExtensions
+    internal static class HashAlgorithmExtensions
     {
-        public static async Task<byte[]> ComputeHashAsync(this HashAlgorithm hashAlgorithm, Stream stream, CancellationToken cancellationToken)
+        internal static async Task<byte[]> ComputeHashAsync(this HashAlgorithm hashAlgorithm, Stream stream, CancellationToken cancellationToken)
         {
             byte[] buffer = new byte[4096];
             int bytesRead;
@@ -166,7 +166,7 @@ namespace SvR.ContentPrep
             return hashAlgorithm.Hash;
         }
 
-        public static bool CompareHashes(this byte[] input, byte[] compareTo)
+        internal static bool CompareHashes(this byte[] input, byte[] compareTo)
         {
             if (input.Length != compareTo.Length)
             {

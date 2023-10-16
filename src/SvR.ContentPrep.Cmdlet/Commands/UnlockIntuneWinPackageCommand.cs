@@ -3,9 +3,15 @@ using System.Management.Automation;
 
 namespace SvR.ContentPrep.Cmdlet
 {
-    [Cmdlet(VerbsCommon.Unlock, "IntuneWinPackage")]
+    /// <summary>
+    /// Decrypt an IntuneWin package
+    /// </summary>
+    [Cmdlet(VerbsCommon.Unlock, "IntuneWinPackage", HelpUri = "https://github.com/svrooij/ContentPrep/blob/main/src/SvR.ContentPrep.Cmdlet/README.md")]
     public class UnlockIntuneWinPackageCommand : PSCmdlet
     {
+        /// <summary>
+        /// The location of the .intunewin file
+        /// </summary>
         [Parameter(
             Mandatory = true,
             Position = 0,
@@ -14,6 +20,9 @@ namespace SvR.ContentPrep.Cmdlet
             HelpMessage = "The location of the .intunewin file")]
         public string SourceFile { get; set; }
 
+        /// <summary>
+        /// Destination folder
+        /// </summary>
         [Parameter(
             Mandatory = true,
             Position = 1,
@@ -23,8 +32,11 @@ namespace SvR.ContentPrep.Cmdlet
         public string DestinationPath { get; set; }
 
         private Packager packager;
-        private PowerShellLogger<Packager>? logger;
+        private PowerShellLogger<Packager> logger;
 
+        /// <summary>
+        /// 
+        /// </summary>
         protected override void BeginProcessing()
         {
             WriteVerbose("Begin unlocking package");
@@ -32,6 +44,9 @@ namespace SvR.ContentPrep.Cmdlet
             packager = new Packager(logger);
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
         protected override void ProcessRecord()
         {
             try
@@ -54,6 +69,9 @@ namespace SvR.ContentPrep.Cmdlet
             }
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
         protected override void EndProcessing()
         {
             packager = null;

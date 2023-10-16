@@ -5,6 +5,8 @@ Normally you would need the closed source [Microsoft Win32-content-prep-tool](ht
 
 Since the process is not documented anywhere not all features are supported yet, but the most important ones are.
 
+> **Warning**: This is not a replacement for the Microsoft tool, it is a re-implementation of the tool. It is not feature complete and it might not work for your use case. If you need a tool that works, use the Microsoft tool. This library is provided as-is, without any warranty or support.
+
 ## Installation
 
 **Note:** this is not yet published but will be soon.
@@ -62,7 +64,7 @@ This PowerShell module is just an easy way to use the [Svrooij.ContentPrep](http
 
 This module and the library is build with async code. That means that logging failed because PowerShell forces the output to be synchronous. This is a [known issue](https://github.com/PowerShell/PowerShell/issues/10452) without a solution in sight.
 
-To overcome this problem this code uses the [ThreadAffinitiveSynchronizationContext](https://github.com/NTTLimitedRD/OctopusDeploy.Powershell/blob/7653993ffbf3ddfc7381e1196dbaa6fdf43cd982/OctopusDeploy.Powershell/ThreadAffinitiveSynchronizationContext.cs) from [OctopusDeploy.Powershell](https://github.com/NTTLimitedRD/OctopusDeploy.Powershell), which is [licensed under MIT](https://github.com/NTTLimitedRD/OctopusDeploy.Powershell/LICENSE).
+To overcome this problem this module uses the [ThreadAffinitiveSynchronizationContext](https://github.com/NTTLimitedRD/OctopusDeploy.Powershell/blob/7653993ffbf3ddfc7381e1196dbaa6fdf43cd982/OctopusDeploy.Powershell/ThreadAffinitiveSynchronizationContext.cs) from [OctopusDeploy.Powershell](https://github.com/NTTLimitedRD/OctopusDeploy.Powershell), which is [licensed under MIT](https://github.com/NTTLimitedRD/OctopusDeploy.Powershell/blob/master/LICENSE).
 
 ## Support
 

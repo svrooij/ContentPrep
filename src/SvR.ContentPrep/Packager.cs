@@ -10,6 +10,9 @@ using Microsoft.Extensions.Logging.Abstractions;
 
 namespace SvR.ContentPrep
 {
+    /// <summary>
+    /// Main entry point for the ContentPrep library
+    /// </summary>
     public class Packager
     {
         private readonly ILogger<Packager> logger;
@@ -18,11 +21,23 @@ namespace SvR.ContentPrep
         internal const string ToolVersion = "1.8.4.0";
         internal const string EncryptedPackageFileName = "IntunePackage.intunewin";
 
+        /// <summary>
+        /// Creates a new instance of the Packager class
+        /// </summary>
+        /// <param name="logger">Supply an optional ILogger, or register by DI off course.</param>
         public Packager(ILogger<Packager>? logger = null)
         {
             this.logger = logger ?? new NullLogger<Packager>();
         }
 
+        /// <summary>
+        /// Creates a package from a setup file
+        /// </summary>
+        /// <param name="folder">Full path of source folder</param>
+        /// <param name="setupFile">Full path of main setup file, in source folder</param>
+        /// <param name="outputFolder">Output path to publish the package</param>
+        /// <param name="applicationDetails">(optional) Application details, this code does not load this data from the MSI file.</param>
+        /// <param name="cancellationToken">(optiona) Cancellation token</param>
         public async Task CreatePackage(
           string folder,
           string setupFile,
@@ -48,7 +63,7 @@ namespace SvR.ContentPrep
                 // TODO: Add support for reading info from MSI files, but has to be cross platform
                 ApplicationInfo applicationInfo = applicationDetails?.MsiInfo != null
                     ? (ApplicationInfo)new MsiApplicationInfo() { MsiInfo = applicationDetails.MsiInfo }
-                    : new CustomApplicationInfo();
+                    : new ApplicationInfo();
                 applicationInfo.FileName = EncryptedPackageFileName;
                 applicationInfo.Name = string.IsNullOrEmpty(applicationDetails?.Name) ? Path.GetFileName(setupFile) : applicationDetails!.Name!;
                 applicationInfo.UnencryptedContentSize = setupFileSize;
@@ -64,7 +79,6 @@ namespace SvR.ContentPrep
                 if (!Directory.Exists(metadataFolder))
                     Directory.CreateDirectory(metadataFolder);
 
-                //using (FileStream fileStream = File.Open(metadataFile, FileMode.Create, FileAccess.Write, FileShare.None))
                 using (FileStream fileStream = new FileStream(metadataFile, FileMode.Create, FileAccess.Write, FileShare.None, bufferSize: 4096, useAsync: true))
                 {
                     byte[] xmlData = Encoding.UTF8.GetBytes(xml);
@@ -81,14 +95,29 @@ namespace SvR.ContentPrep
             }
             finally
             {
-                logger.LogDebug("Removing temporary files");
+                
                 await Task.Delay(1000, cancellationToken);
-                //if (Directory.Exists(tempFolder))
-                //    Directory.Delete(tempFolder, true);
-                logger.LogDebug("Removed temporary files");
+                try {
+                    if (Directory.Exists(tempFolder))
+                    {
+                        logger.LogDebug("Removing temporary files");
+                        Directory.Delete(tempFolder, true);
+                        logger.LogDebug("Removed temporary files");
+                    }
+                        
+                } catch (Exception ex) {
+                    logger.LogWarning(ex, "Error removing temporary files");
+                }
             }
         }
 
+        /// <summary>
+        /// Decrypt an intunewin file to a folder
+        /// </summary>
+        /// <param name="packageFile">Full path of intunewin file</param>
+        /// <param name="outputFolder">Output folder</param>
+        /// <param name="cancellationToken">(optional) Cancellation token</param>
+        /// <returns></returns>
         public async Task Unpack(
             string packageFile,
             string outputFolder,
@@ -113,8 +142,6 @@ namespace SvR.ContentPrep
                 using (FileStream metadataStream = new FileStream(metadataFile, FileMode.Open, FileAccess.Read, FileShare.None, bufferSize: 4096, useAsync: true))
                 using (StreamReader metadataCopy = new StreamReader(metadataStream))
                 {
-                    //await metadataStream.CopyToAsync(metadataCopy, 4096, cancellationToken);
-                    //metadataCopy.Seek(0, SeekOrigin.Begin);
                     applicationInfo = ApplicationInfo.FromXml(metadataCopy);
                     metadataCopy.Close();
                     metadataStream.Close();

@@ -5,27 +5,54 @@ using System.Xml.Serialization;
 
 namespace SvR.ContentPrep.Models
 {
+    /// <summary>
+    /// Application information for xml serialization
+    /// </summary>
     [XmlRoot("ApplicationInfo")]
     [XmlInclude(typeof(MsiApplicationInfo))]
-    [XmlInclude(typeof(CustomApplicationInfo))]
     [Serializable]
     public class ApplicationInfo
     {
+        /// <summary>
+        /// Version of the tool that will be used to create the package (copied from original tool)
+        /// </summary>
         [XmlAttribute]
         public string? ToolVersion { get; set; }
 
+        /// <summary>
+        /// Gets or sets the application name.
+        /// </summary>
         public string? Name { get; set; }
 
+        /// <summary>
+        /// Gets or sets the application description.
+        /// </summary>
         public string? Description { get; set; }
 
+        /// <summary>
+        /// Gets or sets the unencrypted content size.
+        /// </summary>
         public long UnencryptedContentSize { get; set; }
 
+        /// <summary>
+        /// Gets or sets the filename inside the package.
+        /// </summary>
         public string? FileName { get; set; }
 
+        /// <summary>
+        /// Gets or sets the setup file.
+        /// </summary>
         public string? SetupFile { get; set; }
 
+        /// <summary>
+        /// Gets or sets the encryption info or the package.
+        /// </summary>
         public FileEncryptionInfo? EncryptionInfo { get; set; }
 
+        /// <summary>
+        /// Writes the application info to xml.
+        /// </summary>
+        /// <returns>serialized output</returns>
         public string ToXml()
         {
             using (StringWriter output = new StringWriter())

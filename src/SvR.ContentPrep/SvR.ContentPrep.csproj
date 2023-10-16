@@ -2,12 +2,21 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
+	  <AssemblyName>SvRooij.ContentPrep</AssemblyName>
 	  <LangVersion>8.0</LangVersion>
 	  <Nullable>enable</Nullable>
+	  <PackageReadmeFile>README.md</PackageReadmeFile>
+	  <GenerateDocumentationFile>True</GenerateDocumentationFile>
+	  <PackageId>SvRooij.ContentPrep</PackageId>
+	  <Title>Content Prep library</Title>
+	  <Authors>Stephan van Rooij</Authors>
+	  <PackageProjectUrl>https://github.com/svrooij/ContentPrep/</PackageProjectUrl>
+	  <RepositoryUrl>https://github.com/svrooij/ContentPrep/</RepositoryUrl>
+	  <RepositoryType>git</RepositoryType>
   </PropertyGroup>
 
   <ItemGroup>
-    <None Include="..\..\README.md" Pack="true" PackagePath="\README.md" />
+	  <None Update="README.md" Pack="true" PackagePath="\README.md" />
     <None Include="..\..\LICENSE.txt" Pack="true" PackagePath="\LICENSE.txt" />
   </ItemGroup>
 
