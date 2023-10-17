@@ -8,15 +8,27 @@ jobs:
   build-and-publish:
     runs-on: windows-latest
     steps:
-      - name: Checkout code
+      - name: 👨‍💻 Check-out code
         uses: actions/checkout@v2
-      - name: Setup .NET
+      - name: 👨‍🔧 Setup .NET Core SDK
         uses: actions/setup-dotnet@v1
         with:
           dotnet-version: '6.0.x'
-      - name: Restore dependencies
+      - name: 🔍 Enable problem matchers
+        run: echo "::add-matcher::.github/matchers/dotnet.json"
+
+      - name: 🦸‍♂️ Restore steriods
+        uses: actions/cache@v3
+        with:
+          path: ~/.nuget/packages
+          # Look to see if there is a cache hit for the corresponding requirements file
+          key: ${{ runner.os }}-nuget-${{ hashFiles('**/packages.lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-nuget  
+
+      - name: 🎒 Load packages
         run: dotnet restore
-      - name: Build PowerShell module
+      - name: 🛠️ Build PowerShell module
         run: dotnet build .\src\SvR.ContentPrep.Cmdlet -c Release -o .\dist\SvRooij.ContentPrep.Cmdlet  
       # - name: Analyses
       #   shell: pwsh
