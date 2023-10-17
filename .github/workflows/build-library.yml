@@ -51,10 +51,11 @@ jobs:
         run: dotnet restore
 
       - name: 🛠️ Build code
-        run: dotnet build --configuration Release --no-restore
+        run: |
+          dotnet build --configuration Release --no-restore ./src/SvR.ContentPrep/SvR.ContentPrep.csproj
 
       - name: ✔️ Testing code
-        run: dotnet test --configuration Release -v minimal --no-build --logger GitHubActions '/p:CollectCoverage=true;CoverletOutputFormat="json,lcov,cobertura";MergeWith=${{github.workspace}}/coverage.json;CoverletOutput=${{github.workspace}}/coverage' -- RunConfiguration.CollectSourceInformation=true
+        run: dotnet test --configuration Release -v minimal --no-restore --logger GitHubActions '/p:CollectCoverage=true;CoverletOutputFormat="json,lcov,cobertura";MergeWith=${{github.workspace}}/coverage.json;CoverletOutput=${{github.workspace}}/coverage' -- RunConfiguration.CollectSourceInformation=true
 
       - name: 📝 Code Coverage report
         run: |
@@ -111,7 +112,7 @@ jobs:
       run: dotnet build --configuration Release --no-restore ./src/SvR.ContentPrep/SvR.ContentPrep.csproj
 
     - name: 📦 Pack library
-      run: dotnet pack --configuration Release --no-build --no-restore ./src/SvR.ContentPrep/SvR.ContentPrep.csproj
+      run: dotnet pack --configuration Release --no-build ./src/SvR.ContentPrep/SvR.ContentPrep.csproj
 
     - name: ✈️ Publish SvR.ContentPrep to nuget.org
       run: dotnet nuget push ./src/SvR.ContentPrep/bin/Release/SvRooij.ContentPrep.*.nupkg -k $NUGET_AUTH_TOKEN -s https://api.nuget.org/v3/index.json
