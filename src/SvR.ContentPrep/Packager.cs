@@ -96,17 +96,20 @@ namespace SvRooij.ContentPrep
             }
             finally
             {
-                
+
                 await Task.Delay(1000, cancellationToken);
-                try {
+                try
+                {
                     if (Directory.Exists(tempFolder))
                     {
                         logger.LogDebug("Removing temporary files");
                         Directory.Delete(tempFolder, true);
                         logger.LogDebug("Removed temporary files");
                     }
-                        
-                } catch (Exception ex) {
+
+                }
+                catch (Exception ex)
+                {
                     logger.LogWarning(ex, "Error removing temporary files");
                 }
             }

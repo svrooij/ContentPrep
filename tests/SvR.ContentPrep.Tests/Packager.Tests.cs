@@ -33,7 +33,7 @@ public class PackagerTests
     [TestMethod]
     public void CreatePackage_NonExistingFolder_ThrowsDirectoryNotFound()
     {
-          // Arrange
+        // Arrange
         var packager = new Packager();
         var inputFolder = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
 

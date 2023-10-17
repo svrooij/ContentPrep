@@ -72,7 +72,7 @@ namespace SvR.ContentPrep.Cmdlet
                     Directory.CreateDirectory(DestinationPath);
                 }
                 WriteVerbose($"Trying to create package for {setupFile}");
-                ThreadAffinitiveSynchronizationContext.RunSynchronized(() => 
+                ThreadAffinitiveSynchronizationContext.RunSynchronized(() =>
                     packager.CreatePackage(SourcePath, setupFile, DestinationPath)
                 );
             }
