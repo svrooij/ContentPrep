@@ -45,12 +45,13 @@ namespace SvRooij.ContentPrep
           ApplicationDetails? applicationDetails = null,
           CancellationToken cancellationToken = default)
         {
+            CheckCreateParamsOrThrow(folder, setupFile, outputFolder);
             logger.LogInformation("Creating package for {SetupFile} in {Folder} to {OutputFolder}", setupFile, folder, outputFolder);
             string tempFolder = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
             string outputFileName = GetOutputFileName(setupFile, outputFolder);
             try
             {
-                CheckParamsOrThrow(folder, setupFile, outputFolder);
+                //CheckParamsOrThrow(folder, setupFile, outputFolder);
                 string packageFolder = Path.Combine(tempFolder, "IntuneWinPackage");
                 string packageContentFolder = Path.Combine(packageFolder, "Contents");
                 string encryptedPackageLocation = Path.Combine(packageContentFolder, EncryptedPackageFileName);
@@ -123,6 +124,7 @@ namespace SvRooij.ContentPrep
             string outputFolder,
             CancellationToken cancellationToken = default)
         {
+            CheckUnpackParamsOrThrow(packageFile, outputFolder);
             logger.LogInformation("Unpacking intunewin at {PackageFile} to {OutputFolder}", packageFile, outputFolder);
             string tempFolder = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
             try
@@ -199,11 +201,28 @@ namespace SvRooij.ContentPrep
                 throw new ArgumentException(string.Format(CultureInfo.InvariantCulture, "Setup file '{0}' should be in folder '{1}'", setupFile, setupFolder));
         }
 
-        private static void CheckParamsOrThrow(string folder, string setupFile, string outputFolder)
+        private static void CheckCreateParamsOrThrow(string folder, string setupFile, string outputFolder)
         {
+            if (string.IsNullOrEmpty(folder))
+                throw new ArgumentNullException(nameof(folder));
+            if (string.IsNullOrEmpty(setupFile))
+                throw new ArgumentNullException(nameof(setupFile));
+            if (string.IsNullOrEmpty(outputFolder))
+                throw new ArgumentNullException(nameof(outputFolder));
             if (!Directory.Exists(folder))
                 throw new DirectoryNotFoundException(string.Format(CultureInfo.InvariantCulture, "Folder '{0}' can not be found", folder));
             CheckSetupFileExistsAndInSetupFolder(folder, setupFile);
+            TryWritingToFolder(outputFolder);
+        }
+
+        private static void CheckUnpackParamsOrThrow(string packageFile, string outputFolder)
+        {
+            if (string.IsNullOrEmpty(packageFile))
+                throw new ArgumentNullException(nameof(packageFile));
+            if (string.IsNullOrEmpty(outputFolder))
+                throw new ArgumentNullException(nameof(outputFolder));
+            if (!File.Exists(packageFile))
+                throw new FileNotFoundException(string.Format(CultureInfo.InvariantCulture, "File '{0}' can not be found", packageFile));
             TryWritingToFolder(outputFolder);
         }
     }

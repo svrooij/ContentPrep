@@ -364,3 +364,6 @@ FodyWeavers.xsd
 
 # Dist folder
 dist/
+
+# Live unit testing files
+*.lutconfig
