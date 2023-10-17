@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Xml.Serialization;
 
-namespace SvR.ContentPrep.Models
+namespace SvRooij.ContentPrep.Models
 {
     /// <summary>
     /// MSI information for xml serialization

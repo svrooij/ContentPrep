@@ -1,4 +1,4 @@
-﻿namespace SvR.ContentPrep.Models
+﻿namespace SvRooij.ContentPrep.Models
 {
     /// <summary>
     /// The execution context of an installer.

@@ -1,6 +1,6 @@
 ﻿using System.IO;
 using System.Management.Automation;
-
+using SvRooij.ContentPrep;
 namespace SvR.ContentPrep.Cmdlet
 {
     /// <summary>

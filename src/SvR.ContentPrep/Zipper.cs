@@ -4,7 +4,7 @@ using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace SvR.ContentPrep
+namespace SvRooij.ContentPrep
 {
     internal static class Zipper
     {

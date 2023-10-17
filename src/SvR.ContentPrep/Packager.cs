@@ -4,11 +4,11 @@ using System.IO;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using SvR.ContentPrep.Models;
+using SvRooij.ContentPrep.Models;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 
-namespace SvR.ContentPrep
+namespace SvRooij.ContentPrep
 {
     /// <summary>
     /// Main entry point for the ContentPrep library

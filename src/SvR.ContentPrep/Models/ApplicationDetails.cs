@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace SvR.ContentPrep.Models
+namespace SvRooij.ContentPrep.Models
 {
     /// <summary>
     /// Application details.

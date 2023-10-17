@@ -3,7 +3,7 @@ using System.IO;
 using System.Xml;
 using System.Xml.Serialization;
 
-namespace SvR.ContentPrep.Models
+namespace SvRooij.ContentPrep.Models
 {
     /// <summary>
     /// Application information for xml serialization

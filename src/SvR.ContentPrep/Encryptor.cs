@@ -4,9 +4,9 @@ using System.IO.Pipes;
 using System.Security.Cryptography;
 using System.Threading;
 using System.Threading.Tasks;
-using SvR.ContentPrep.Models;
+using SvRooij.ContentPrep.Models;
 
-namespace SvR.ContentPrep
+namespace SvRooij.ContentPrep
 {
     internal static class Encryptor
     {

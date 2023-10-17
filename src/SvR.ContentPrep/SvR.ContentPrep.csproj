@@ -2,17 +2,23 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
-	  <AssemblyName>SvRooij.ContentPrep</AssemblyName>
-	  <LangVersion>8.0</LangVersion>
-	  <Nullable>enable</Nullable>
-	  <PackageReadmeFile>README.md</PackageReadmeFile>
-	  <GenerateDocumentationFile>True</GenerateDocumentationFile>
-	  <PackageId>SvRooij.ContentPrep</PackageId>
-	  <Title>Content Prep library</Title>
-	  <Authors>Stephan van Rooij</Authors>
-	  <PackageProjectUrl>https://github.com/svrooij/ContentPrep/</PackageProjectUrl>
-	  <RepositoryUrl>https://github.com/svrooij/ContentPrep/</RepositoryUrl>
-	  <RepositoryType>git</RepositoryType>
+    <AssemblyName>SvRooij.ContentPrep</AssemblyName>
+    <LangVersion>8.0</LangVersion>
+    <Nullable>enable</Nullable>
+    <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
+    <Authors>Stephan van Rooij</Authors>
+    <Copyright>Copyright (c) 2023 Stephan van Rooij</Copyright>
+    <GenerateDocumentationFile>True</GenerateDocumentationFile>
+    <PackageId>SvRooij.ContentPrep</PackageId>
+    <PackageLicenseExpression>GPLv3</PackageLicenseExpression>
+    <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
+    <PackageProjectUrl>https://github.com/svrooij/ContentPrep/</PackageProjectUrl>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageRequireLicenseAcceptance>True</PackageRequireLicenseAcceptance>
+    <PackageTags>Intune;ContentPrep;Win32</PackageTags>
+    <RepositoryType>git</RepositoryType>
+    <RepositoryUrl>https://github.com/svrooij/ContentPrep.git</RepositoryUrl>
+    <Title>Content Prep library</Title>
   </PropertyGroup>
 
   <ItemGroup>
