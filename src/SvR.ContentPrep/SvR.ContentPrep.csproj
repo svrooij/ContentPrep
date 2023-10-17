@@ -10,7 +10,6 @@
     <Copyright>Copyright (c) 2023 Stephan van Rooij</Copyright>
     <GenerateDocumentationFile>True</GenerateDocumentationFile>
     <PackageId>SvRooij.ContentPrep</PackageId>
-    <PackageLicenseExpression>GPLv3</PackageLicenseExpression>
     <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
     <PackageProjectUrl>https://github.com/svrooij/ContentPrep/</PackageProjectUrl>
     <PackageReadmeFile>README.md</PackageReadmeFile>
