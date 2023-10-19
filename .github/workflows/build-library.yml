@@ -12,9 +12,10 @@ on:
   pull_request:
     branches:
       - main
-      - devevelop
+      - develop
     paths:
       - 'src/SvR.ContentPrep/**'
+      - 'tests/**'
       - '.github/workflows/build-library.yml'
   workflow_dispatch:
 
