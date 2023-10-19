@@ -1,125 +1,110 @@
+using System.Diagnostics;
+using System.Security.Cryptography;
+
 namespace SvRooij.ContentPrep.Tests;
 
 [TestClass]
-public class PackagerTests
+public partial class PackagerTests
 {
+    private const string setupFileName = "setup.exe";
     [TestMethod]
-    public void CreatePackage_NullFolder_ThrowsArgumentNull()
+    [DataRow(2, 10000, 1000L)]
+    [DataRow(10, 30000, 2000L)]
+    [DataRow(100, 60000, 8000L)]
+    public async Task Packager_CreatePackage_Succeeds(int sizeInMb, int millisecondsDelay, long expectedPackageMs)
     {
-        // Arrange
+        // Create Timeout in case something goes wrong
+        var cts = new CancellationTokenSource(millisecondsDelay);
+        var setupFolder = TestHelper.GetTestFolder();
+        var setupFile = await TestHelper.GenerateTempFileInFolder(setupFolder, setupFileName, sizeInMb, cts.Token);
+        var outputDirectory = TestHelper.GetTestFolder();
+        var outputFile = Path.Combine(outputDirectory, "setup.intunewin");
+
         var packager = new Packager();
 
-        Assert.ThrowsExceptionAsync<ArgumentNullException>(() => packager.CreatePackage(null, null, null));
+        try
+        {
+            var stopwatch = new Stopwatch();
+            stopwatch.Start();
+            await packager.CreatePackage(setupFolder, setupFile, outputDirectory, null, cts.Token);
+            stopwatch.Stop();
+            var fileExists = File.Exists(outputFile);
+            Assert.IsTrue(fileExists, "Output package not created");
+            var filesize = new FileInfo(outputFile).Length;
+            var fileGreaterThenSetup = filesize > (sizeInMb * 1024L * 1024L);
+            Assert.IsTrue(fileGreaterThenSetup, "Output package is not bigger then the setup file");
+            var fastEnough = (expectedPackageMs > stopwatch.ElapsedMilliseconds);
+            Assert.IsTrue(fastEnough, $"It took {stopwatch.ElapsedMilliseconds}ms to package instead of {expectedPackageMs}");
+        }
+        catch (AssertFailedException)
+        {
+            throw;
+        }
+        catch (Exception ex)
+        {
+            Assert.Fail("Expected no exceptions but got {0}", ex.GetType().Name);
+        }
+        finally
+        {
+            TestHelper.RemoveFolderIfExists(setupFolder);
+            TestHelper.RemoveFolderIfExists(outputDirectory);
+        }
+
     }
 
     [TestMethod]
-    public void CreatePackage_NullSetupFile_ThrowsArgumentNull()
+    public async Task Packager_Unpack_Succeeds()
     {
-        // Arrange
+        var cts = new CancellationTokenSource(60000);
+        var setupFolder = TestHelper.GetTestFolder();
+        var setupFile = await TestHelper.GenerateTempFileInFolder(setupFolder, setupFileName, 10, cts.Token);
+        var hasher = SHA256.Create();
+        await using var fs = new FileStream(setupFile, FileMode.Open, FileAccess.Read, FileShare.Read, bufferSize: 4096,
+            useAsync: true);
+        var hash = await hasher.ComputeHashAsync(fs, cts.Token);
+        var originalFilesize = new FileInfo(setupFile).Length;
+        var packageDirectory = TestHelper.GetTestFolder();
+        var outputDirectory = TestHelper.GetTestFolder();
+
         var packager = new Packager();
 
-        Assert.ThrowsExceptionAsync<ArgumentNullException>(() => packager.CreatePackage("test", null, null));
+        try
+        {
+            // Create a fake package
+            await packager.CreatePackage(setupFolder, setupFile, packageDirectory, null, cts.Token);
+
+            var packageFile = Path.Combine(packageDirectory, "setup.intunewin");
+
+            await packager.Unpack(packageFile, outputDirectory, cts.Token);
+
+            var unpackedSetup = Path.Combine(outputDirectory, setupFileName);
+            var unpackedFilesize = new FileInfo(unpackedSetup).Length;
+
+            Assert.AreEqual(originalFilesize, unpackedFilesize, "Original and unpacked setup are not the same size");
+            await using var outputFs = new FileStream(unpackedSetup, FileMode.Open, FileAccess.Read, FileShare.Read, bufferSize: 4096,
+                useAsync: true);
+            var outputHash = await hasher.ComputeHashAsync(outputFs, cts.Token);
+
+            var hashesAreEqual = TestHelper.CompareHashes(hash, outputHash);
+            Assert.IsTrue(hashesAreEqual, "Hashes don't match");
+        }
+        catch (AssertFailedException)
+        {
+            throw;
+        }
+        catch (Exception ex)
+        {
+            Assert.Fail("Expected no exceptions but got {0}", ex.GetType().Name);
+        }
+        finally
+        {
+            TestHelper.RemoveFolderIfExists(packageDirectory);
+            TestHelper.RemoveFolderIfExists(outputDirectory);
+            TestHelper.RemoveFolderIfExists(setupFolder);
+            hasher.Dispose();
+        }
+
+
     }
 
-    [TestMethod]
-    public void CreatePackage_NullOutput_ThrowsArgumentNull()
-    {
-        // Arrange
-        var packager = new Packager();
-
-        Assert.ThrowsExceptionAsync<ArgumentNullException>(() => packager.CreatePackage("test", "test", null));
-    }
-
-    [TestMethod]
-    public void CreatePackage_NonExistingFolder_ThrowsDirectoryNotFound()
-    {
-        // Arrange
-        var packager = new Packager();
-        var inputFolder = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
-
-
-        Assert.ThrowsExceptionAsync<DirectoryNotFoundException>(() => packager.CreatePackage(inputFolder, "test", "test"));
-    }
-
-    [TestMethod]
-    public void CreatePackage_NonExistingSetup_ThrowsFileNotFound()
-    {
-        // Arrange
-        var packager = new Packager();
-        var inputFolder = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
-        Directory.CreateDirectory(inputFolder);
-        var setup = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString() + ".msi");
-
-        Assert.ThrowsExceptionAsync<FileNotFoundException>(() => packager.CreatePackage(inputFolder, setup, "test"));
-        Directory.Delete(inputFolder);
-    }
-
-    [TestMethod]
-    public void CreatePackage_ExistingSetupWrongFolder_ThrowsArgumentException()
-    {
-        // Arrange
-        var packager = new Packager();
-        var inputFolder = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
-        Directory.CreateDirectory(inputFolder);
-        var setup = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString() + ".msi");
-        File.CreateText(setup).Close();
-
-        Assert.ThrowsExceptionAsync<ArgumentException>(() => packager.CreatePackage(inputFolder, setup, "test"));
-        Directory.Delete(inputFolder, true);
-    }
-
-    [TestMethod]
-    public void CreatePackage_NoOutputDir_ThrowsDirectoryNotFound()
-    {
-        // Arrange
-        var packager = new Packager();
-        var inputFolder = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
-        var outputFolder = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
-        Directory.CreateDirectory(inputFolder);
-        var setup = Path.Combine(inputFolder, Guid.NewGuid().ToString() + ".msi");
-        File.CreateText(setup).Close();
-
-        Assert.ThrowsExceptionAsync<DirectoryNotFoundException>(() => packager.CreatePackage(inputFolder, setup, outputFolder));
-        Directory.Delete(inputFolder, true);
-        //Directory.Delete(outputFolder, true);
-    }
-
-    [TestMethod]
-    public void Unpack_NullPackage_ThrowsArgumentNull()
-    {
-        // Arrange
-        var packager = new Packager();
-
-        Assert.ThrowsExceptionAsync<ArgumentNullException>(() => packager.Unpack(null, null));
-    }
-
-    [TestMethod]
-    public void Unpack_NullOutput_ThrowsArgumentNull()
-    {
-        // Arrange
-        var packager = new Packager();
-
-        Assert.ThrowsExceptionAsync<ArgumentNullException>(() => packager.Unpack("test", null));
-    }
-
-    [TestMethod]
-    public void Unpack_NonExistingPackage_ThrowsFileNotFound()
-    {
-        // Arrange
-        var packager = new Packager();
-        var package = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString() + ".msi");
-
-        Assert.ThrowsExceptionAsync<FileNotFoundException>(() => packager.Unpack(package, "test"));
-    }
-
-    [TestMethod]
-    public void Unpack_NonExistingOutput_ThrowsDirectoryNotFound()
-    {
-        var packager = new Packager();
-        var package = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString() + ".msi");
-        File.CreateText(package).Close();
-        var outputFolder = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
-
-        Assert.ThrowsExceptionAsync<DirectoryNotFoundException>(() => packager.Unpack(package, outputFolder));
-    }
 }
