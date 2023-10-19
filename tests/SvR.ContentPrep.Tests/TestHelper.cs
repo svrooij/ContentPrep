@@ -29,6 +29,10 @@ public static class TestHelper
         return tempFilename;
     }
 
+    /// <summary>
+    /// Generate a directory name in the temp folder
+    /// </summary>
+    /// <returns>path of the created directory</returns>
     public static string GetTestFolder()
     {
         var folder = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
@@ -36,6 +40,10 @@ public static class TestHelper
         return folder;
     }
 
+    /// <summary>
+    /// Delete a directory recursive, if exists
+    /// </summary>
+    /// <param name="path">Path of the directory to delete</param>
     public static void RemoveFolderIfExists(string path)
     {
         try
@@ -48,5 +56,29 @@ public static class TestHelper
 
         }
 
+    }
+
+    /// <summary>
+    /// Compare two byte arrays (hash output)
+    /// </summary>
+    /// <param name="input">array 1</param>
+    /// <param name="compareTo">array 2</param>
+    /// <returns>True if byte arrays are exactly equal</returns>
+    internal static bool CompareHashes(byte[] input, byte[] compareTo)
+    {
+        if (input.Length != compareTo.Length)
+        {
+            return false;
+        }
+
+        for (int i = 0; i < input.Length; i++)
+        {
+            if (input[i] != compareTo[i])
+            {
+                return false;
+            }
+        }
+
+        return true;
     }
 }
