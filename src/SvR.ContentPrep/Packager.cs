@@ -97,7 +97,7 @@ namespace SvRooij.ContentPrep
             finally
             {
 
-                await Task.Delay(1000, cancellationToken);
+                await Task.Delay(50, cancellationToken);
                 try
                 {
                     if (Directory.Exists(tempFolder))

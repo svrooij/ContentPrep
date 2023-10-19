@@ -18,7 +18,7 @@ jobs:
       - name: 👨‍🔧 Setup .NET Core SDK
         uses: actions/setup-dotnet@v1
         with:
-          dotnet-version: '6.0.x'
+          dotnet-version: '7.x'
       - name: 🔍 Enable problem matchers
         run: echo "::add-matcher::.github/matchers/dotnet.json"
 
@@ -33,6 +33,7 @@ jobs:
 
       - name: 🎒 Load packages
         run: dotnet restore
+
       - name: 🛠️ Build PowerShell module
         run: dotnet build .\src\SvR.ContentPrep.Cmdlet -c Release -o .\dist\SvRooij.ContentPrep.Cmdlet  
       # - name: Analyses
