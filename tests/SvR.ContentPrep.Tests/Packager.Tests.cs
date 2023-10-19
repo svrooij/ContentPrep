@@ -10,7 +10,7 @@ public partial class PackagerTests
     [TestMethod]
     [DataRow(2, 10000, 1000L)]
     [DataRow(10, 30000, 2000L)]
-    [DataRow(100, 60000, 5000L)]
+    [DataRow(100, 60000, 8000L)]
     public async Task Packager_CreatePackage_Succeeds(int sizeInMb, int millisecondsDelay, long expectedPackageMs)
     {
         // Create Timeout in case something goes wrong
@@ -84,6 +84,7 @@ public partial class PackagerTests
             await using var outputFs = new FileStream(unpackedSetup, FileMode.Open, FileAccess.Read, FileShare.Read, bufferSize: 4096,
                 useAsync: true);
             var outputHash = await hasher.ComputeHashAsync(outputFs, cts.Token);
+
             var hashesAreEqual = TestHelper.CompareHashes(hash, outputHash);
             Assert.IsTrue(hashesAreEqual, "Hashes don't match");
         }

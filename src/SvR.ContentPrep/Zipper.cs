@@ -1,6 +1,5 @@
 ﻿using System.IO;
 using System.IO.Compression;
-using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -18,7 +17,7 @@ namespace SvRooij.ContentPrep
           bool appendFile = false,
           bool addFileToExistingZip = false)
         {
-            string directoryName = Path.GetDirectoryName(targetZipFile);
+            string directoryName = Path.GetDirectoryName(targetZipFile)!;
             if (!Directory.Exists(directoryName))
                 Directory.CreateDirectory(directoryName);
             if (!appendFile && File.Exists(targetZipFile))
@@ -81,7 +80,7 @@ namespace SvRooij.ContentPrep
                 {
                     if (cancellationToken.IsCancellationRequested)
                         break;
-                    string directoryName = Path.Combine(destinationFolder, Path.GetDirectoryName(entry.FullName));
+                    string directoryName = Path.Combine(destinationFolder, Path.GetDirectoryName(entry.FullName)!);
                     if (!string.IsNullOrEmpty(directoryName))
                         Directory.CreateDirectory(directoryName);
                     if (entry.Length > 0L)
