@@ -6,6 +6,7 @@ namespace SvR.ContentPrep.Cmdlet
     /// <summary>
     /// <para type="synopsis">Decrypt an IntuneWin package</para>
     /// <para type="description">Decrypt IntuneWin files, based on this post https://svrooij.io/2023/10/09/decrypting-intunewin-files/</para>
+    /// <para type="link" uri="https://github.com/svrooij/ContentPrep/blob/main/src/SvR.ContentPrep.Cmdlet/README.md">Documentation</para>
     /// </summary>
     /// <example>
     /// <code>

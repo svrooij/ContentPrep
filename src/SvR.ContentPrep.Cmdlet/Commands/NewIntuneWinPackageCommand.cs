@@ -5,7 +5,8 @@ namespace SvR.ContentPrep.Cmdlet
 {
     /// <summary>
     /// <para type="synopsis">Create a new IntuneWin package</para>
-    /// <para type="description">This is a re-implementation of the IntuneWinAppUtil.exe tool, it's not feature complete use at your own risk.</para> 
+    /// <para type="description">This is a re-implementation of the IntuneWinAppUtil.exe tool, it's not feature complete use at your own risk.</para>
+    /// <para type="link" uri="https://github.com/svrooij/ContentPrep/blob/main/src/SvR.ContentPrep.Cmdlet/README.md">Documentation</para> 
     /// </summary>
     /// <example>
     /// <code>
