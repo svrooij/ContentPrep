@@ -4,16 +4,19 @@ using SvRooij.ContentPrep;
 namespace SvR.ContentPrep.Cmdlet
 {
     /// <summary>
-    /// Create a new IntuneWin package
+    /// <para type="synopsis">Create a new IntuneWin package</para>
+    /// <para type="description">This is a re-implementation of the IntuneWinAppUtil.exe tool, it's not feature complete use at your own risk.</para> 
     /// </summary>
-    /// <remarks>
-    /// This is a re-implementation of the IntuneWinAppUtil.exe tool, it's not feature complete use at your own risk.
-    /// </remarks>
+    /// <example>
+    /// <code>
+    /// New-IntuneWinPackage -SourcePath "C:\Temp\Source" -SetupFile "C:\Temp\Source\setup.exe" -DestinationPath "C:\Temp\Destination"
+    /// </code>
+    /// </example>
     [Cmdlet(VerbsCommon.New, "IntuneWinPackage", HelpUri = "https://github.com/svrooij/ContentPrep/blob/main/src/SvR.ContentPrep.Cmdlet/README.md")]
     public class NewIntuneWinPackageCommand : PSCmdlet
     {
         /// <summary>
-        /// Directory containing all the installation files
+        /// <para type="description">Directory containing all the installation files</para>
         /// </summary>
         [Parameter(
             Mandatory = true,
@@ -24,7 +27,7 @@ namespace SvR.ContentPrep.Cmdlet
         public string SourcePath { get; set; }
 
         /// <summary>
-        /// The main setupfile in the source directory
+        /// <para type="description">The main setupfile in the source directory</para>
         /// </summary>
         [Parameter(
             Mandatory = true,
@@ -35,7 +38,7 @@ namespace SvR.ContentPrep.Cmdlet
         public string SetupFile { get; set; }
 
         /// <summary>
-        /// Destination folder
+        /// <para type="description">Destination folder</para>
         /// </summary>
         [Parameter(
             Mandatory = true,

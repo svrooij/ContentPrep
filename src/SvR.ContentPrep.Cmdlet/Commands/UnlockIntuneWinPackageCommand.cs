@@ -4,13 +4,19 @@ using SvRooij.ContentPrep;
 namespace SvR.ContentPrep.Cmdlet
 {
     /// <summary>
-    /// Decrypt an IntuneWin package
+    /// <para type="synopsis">Decrypt an IntuneWin package</para>
+    /// <para type="description">Decrypt IntuneWin files, based on this post https://svrooij.io/2023/10/09/decrypting-intunewin-files/</para>
     /// </summary>
+    /// <example>
+    /// <code>
+    /// Unlock-IntuneWinPackage -SourceFile "C:\Temp\Source\MyApp.intunewin" -DestinationPath "C:\Temp\Destination"
+    /// </code>
+    /// </example>
     [Cmdlet(VerbsCommon.Unlock, "IntuneWinPackage", HelpUri = "https://github.com/svrooij/ContentPrep/blob/main/src/SvR.ContentPrep.Cmdlet/README.md")]
     public class UnlockIntuneWinPackageCommand : PSCmdlet
     {
         /// <summary>
-        /// The location of the .intunewin file
+        /// <para type="description">The location of the .intunewin file</para>
         /// </summary>
         [Parameter(
             Mandatory = true,
@@ -21,7 +27,7 @@ namespace SvR.ContentPrep.Cmdlet
         public string SourceFile { get; set; }
 
         /// <summary>
-        /// Destination folder
+        /// <para type="description">Destination folder</para>
         /// </summary>
         [Parameter(
             Mandatory = true,
