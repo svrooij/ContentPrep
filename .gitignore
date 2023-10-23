@@ -367,3 +367,6 @@ dist/
 
 # Live unit testing files
 *.lutconfig
+
+# Rider stuff
+.idea/

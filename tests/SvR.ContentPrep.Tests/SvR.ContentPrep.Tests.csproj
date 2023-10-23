@@ -1,16 +1,17 @@
-<Project Sdk="Microsoft.NET.Sdk">
-
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>net7.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <DefaultNamespace>SvRooij.ContentPrep.Tests</DefaultNamespace>
-
     <IsPackable>false</IsPackable>
     <IsTestProject>true</IsTestProject>
     <NoWarn>CS8625</NoWarn>
+    <AssemblyVersion>0.1.2.0</AssemblyVersion>
+    <FileVersion>0.1.2.0</FileVersion>
+    <InformationalVersion>0.1.2-alpha.13+Branch.develop.Sha.820434163de76caaa7316d993ad70211f55c251b</InformationalVersion>
+    <Version>0.1.2-alpha0013</Version>
   </PropertyGroup>
-
   <ItemGroup>
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.7.2" />
     <PackageReference Include="MSTest.TestAdapter" Version="3.1.1" />
@@ -28,9 +29,7 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
   </ItemGroup>
-
-    <ItemGroup>
+  <ItemGroup>
     <ProjectReference Include="..\..\src\SvR.ContentPrep\SvR.ContentPrep.csproj" />
   </ItemGroup>
-
 </Project>
