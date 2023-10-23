@@ -1,6 +1,8 @@
-# SvR.ContentPrep
+# SvRooij.ContentPrep
 
 A library to create and decrypt Intune content packages `.intunewin`.
+
+> **Warning**: This is not a replacement for the Microsoft tool, it is a re-implementation of the tool based upon public available information. It is not feature complete and it might not work for your use case. If you need a tool that works, use the Microsoft tool. This library is provided as-is, without any warranty or support.
 
 ## Installation
 
@@ -14,16 +16,18 @@ dotnet add package SvRooij.ContentPrep
 
 ```csharp
 // Add ILogger optional, or register through DI
-var packager = new SvR.ContentPrep.Packager(...);
-await packager.CreatePackage("C:\\path\\to\\source", "setup.exe", "C:\path\to\destination", null, cancellationToken);
+var logger = new NullLogger();
+var packager = new SvRooij.ContentPrep.Packager(logger);
+await packager.CreatePackage("C:\\path\\to\\source", "setup.exe", "C:\path\\to\\destination", null, cancellationToken);
 ```
 
 ### Decrypt a package
 
 ```csharp
 // Add ILogger optional, or register through DI
-var packager = new SvR.ContentPrep.Packager(...);
-await packager.Unpack("C:\\path\\to\\source.intunewin", "C:\path\to\destination", cancellationToken);
+var logger = new NullLogger();
+var packager = new SvRooij.ContentPrep.Packager(logger);
+await packager.Unpack("C:\\path\\to\\source.intunewin", "C:\path\\to\\destination", cancellationToken);
 ```
 
 ## Support

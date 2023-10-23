@@ -1,0 +1,81 @@
+name: Publish to PowerShell Gallery
+on:
+  push:
+    branches:
+      - main
+      # - develop
+    paths:
+      - 'src/SvR.ContentPrep/**'
+      - 'src/SvR.ContentPrep.Cmdlet/**'
+      - '.github/workflows/build-module.yml'
+  workflow_dispatch:
+
+jobs:
+  build-and-publish:
+    runs-on: windows-latest
+    steps:
+      - name: 👨‍💻 Check-out code
+        uses: actions/checkout@v3
+        # Specify depth because of GitVersion
+        with:
+          fetch-depth: 0
+
+      - name: 👨‍🔧 Setup .NET Core SDK
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: '7.x'
+
+      - name: 🔍 Enable problem matchers
+        run: echo "::add-matcher::.github/matchers/dotnet.json"
+
+      - name: 🦸‍♂️ Restore steriods
+        uses: actions/cache@v3
+        with:
+          path: ~/.nuget/packages
+          # Look to see if there is a cache hit for the corresponding requirements file
+          key: ${{ runner.os }}-nuget-${{ hashFiles('**/packages.lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-nuget  
+
+      - name: 🛠️ Compute version with GitVersion
+        id: gitversion
+        shell: pwsh
+        run: |
+          dotnet tool install --global GitVersion.Tool --version 5.*
+          # echo "## 📦 Calculated version" >> $GITHUB_STEP_SUMMARY
+          # echo "" >> $GITHUB_STEP_SUMMARY
+          $gitversion = & "dotnet-gitversion.exe" "/updateprojectfiles" "/output" "buildserver" "/nofetch" "/showvariable" "AssemblySemVer"
+          $env:GITHUB_OUTPUT = "version=$gitversion"; 
+
+      - name: 🎒 Load packages
+        run: dotnet restore
+
+      - name: 🛠️ Build PowerShell module
+        shell: pwsh
+        run: dotnet build .\src\SvR.ContentPrep.Cmdlet -c Release -o .\dist\SvRooij.ContentPrep.Cmdlet  
+
+      - name: 📝 Set module version
+        shell: pwsh
+        env:
+          version: ${{ steps.gitversion.outputs.version }}
+        run: Update-ModuleManifest -Path .\dist\SvRooij.ContentPrep.Cmdlet\SvRooij.ContentPrep.Cmdlet.psd1 -ModuleVersion $env:version
+
+      - name: 🕵️ Import and test module
+        shell: pwsh
+        run: |
+          Import-Module .\dist\SvRooij.ContentPrep.Cmdlet\SvRooij.ContentPrep.Cmdlet.psd1
+          Get-Command -Module SvRooij.ContentPrep.Cmdlet
+          Get-Command -Module SvRooij.ContentPrep.Cmdlet | Select-Object -ExpandProperty Name | ForEach-Object { Get-Help $_ -Full }
+
+      - name: ✈️ Publish to PowerShell Gallery
+        shell: pwsh
+        run: |
+          Import-Module .\dist\SvRooij.ContentPrep.Cmdlet\SvR.ContentPrep.Cmdlet.psd1
+          Publish-Module -Path .\dist\SvRooij.ContentPrep.Cmdlet\ -NuGetApiKey ${{ secrets.PSGALLERY_API_KEY }} -Verbose
+
+      # - name: Analyses
+      #   shell: pwsh
+      #   run: |
+      #     Import-Module .\dist\SvRooij.ContentPrep.Cmdlet\SvR.ContentPrep.Cmdlet.psd1
+      #     Install-Module -Name PSScriptAnalyzer
+      #     Invoke-ScriptAnalyzer -Path .\dist\SvRooij.ContentPrep.Cmdlet\SvR.ContentPrep.Cmdlet.psd1

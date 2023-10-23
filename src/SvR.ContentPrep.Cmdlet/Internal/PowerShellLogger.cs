@@ -1,6 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
 using System;
-using System.Collections.Generic;
 using System.Management.Automation;
 
 namespace SvR.ContentPrep.Cmdlet
@@ -8,6 +7,7 @@ namespace SvR.ContentPrep.Cmdlet
     internal class PowerShellLogger<T> : ILogger<T>
     {
         private readonly LogLevel _logLevel;
+#nullable enable
         private readonly PSCmdlet? _cmdlet;
 
         public PowerShellLogger(PSCmdlet? cmdlet = null)
@@ -16,7 +16,7 @@ namespace SvR.ContentPrep.Cmdlet
             _cmdlet = cmdlet;
         }
 
-        //public event EventHandler<LogEntry> LogMesssage;
+#nullable disable
 
         public IDisposable BeginScope<TState>(TState state) where TState : notnull => default!;
 
@@ -32,23 +32,8 @@ namespace SvR.ContentPrep.Cmdlet
                 return;
             }
 
-            //var message = new LogEntry() { LogLevel = logLevel, Message = formatter(state, exception) };
-
-            //_logs.Add(message);
-
-            //LogMesssage?.Invoke(this, message);
-
-            // Console.WriteLine($"[{logLevel.ToString().ToUpperInvariant()}] {formatter(state, exception)}");
-
             _cmdlet?.WriteLog(logLevel, formatter(state, exception), exception);
         }
-
-        //public LogEntry[] Flush()
-        //{
-        //    var logs = _logs.ToArray();
-        //    _logs.Clear();
-        //    return logs;
-        //}
     }
 
     internal class LogEntry
@@ -59,7 +44,9 @@ namespace SvR.ContentPrep.Cmdlet
 
     internal static class PsCmdletExtensions
     {
+#pragma warning disable CS8632 // The annotation for nullable reference types should only be used in code within a '#nullable' annotations context.
         public static void WriteLog(this PSCmdlet cmdlet, LogLevel logLevel, string message, Exception? e = null)
+#pragma warning restore CS8632 // The annotation for nullable reference types should only be used in code within a '#nullable' annotations context.
         {
             switch (logLevel)
             {

@@ -361,3 +361,12 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+
+# Dist folder
+dist/
+
+# Live unit testing files
+*.lutconfig
+
+# Rider stuff
+.idea/

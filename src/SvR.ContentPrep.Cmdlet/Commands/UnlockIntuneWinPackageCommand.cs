@@ -1,11 +1,24 @@
 ﻿using System.IO;
 using System.Management.Automation;
-
+using SvRooij.ContentPrep;
 namespace SvR.ContentPrep.Cmdlet
 {
-    [Cmdlet(VerbsCommon.Unlock, "IntuneWinPackage")]
+    /// <summary>
+    /// <para type="synopsis">Decrypt an IntuneWin package</para>
+    /// <para type="description">Decrypt IntuneWin files, based on this post https://svrooij.io/2023/10/09/decrypting-intunewin-files/</para>
+    /// <para type="link" uri="https://github.com/svrooij/ContentPrep/blob/main/src/SvR.ContentPrep.Cmdlet/README.md">Documentation</para>
+    /// </summary>
+    /// <example>
+    /// <code>
+    /// Unlock-IntuneWinPackage -SourceFile "C:\Temp\Source\MyApp.intunewin" -DestinationPath "C:\Temp\Destination"
+    /// </code>
+    /// </example>
+    [Cmdlet(VerbsCommon.Unlock, "IntuneWinPackage", HelpUri = "https://github.com/svrooij/ContentPrep/blob/main/src/SvR.ContentPrep.Cmdlet/README.md")]
     public class UnlockIntuneWinPackageCommand : PSCmdlet
     {
+        /// <summary>
+        /// <para type="description">The location of the .intunewin file</para>
+        /// </summary>
         [Parameter(
             Mandatory = true,
             Position = 0,
@@ -14,6 +27,9 @@ namespace SvR.ContentPrep.Cmdlet
             HelpMessage = "The location of the .intunewin file")]
         public string SourceFile { get; set; }
 
+        /// <summary>
+        /// <para type="description">Destination folder</para>
+        /// </summary>
         [Parameter(
             Mandatory = true,
             Position = 1,
@@ -23,8 +39,11 @@ namespace SvR.ContentPrep.Cmdlet
         public string DestinationPath { get; set; }
 
         private Packager packager;
-        private PowerShellLogger<Packager>? logger;
+        private PowerShellLogger<Packager> logger;
 
+        /// <summary>
+        /// 
+        /// </summary>
         protected override void BeginProcessing()
         {
             WriteVerbose("Begin unlocking package");
@@ -32,6 +51,9 @@ namespace SvR.ContentPrep.Cmdlet
             packager = new Packager(logger);
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
         protected override void ProcessRecord()
         {
             try
@@ -54,6 +76,9 @@ namespace SvR.ContentPrep.Cmdlet
             }
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
         protected override void EndProcessing()
         {
             packager = null;

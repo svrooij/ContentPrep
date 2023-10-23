@@ -1,20 +1,30 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
-	  <LangVersion>8.0</LangVersion>
-	  <Nullable>enable</Nullable>
+    <AssemblyName>SvRooij.ContentPrep</AssemblyName>
+    <LangVersion>8.0</LangVersion>
+    <Nullable>enable</Nullable>
+    <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
+    <Authors>Stephan van Rooij</Authors>
+    <Copyright>Copyright (c) 2023 Stephan van Rooij</Copyright>
+    <GenerateDocumentationFile>True</GenerateDocumentationFile>
+    <PackageId>SvRooij.ContentPrep</PackageId>
+    <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
+    <PackageProjectUrl>https://github.com/svrooij/ContentPrep/</PackageProjectUrl>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageRequireLicenseAcceptance>True</PackageRequireLicenseAcceptance>
+    <PackageTags>Intune;ContentPrep;Win32</PackageTags>
+    <RepositoryType>git</RepositoryType>
+    <RepositoryUrl>https://github.com/svrooij/ContentPrep.git</RepositoryUrl>
+    <Title>Content Prep library</Title>
   </PropertyGroup>
-
   <ItemGroup>
-    <None Include="..\..\README.md" Pack="true" PackagePath="\README.md" />
+    <None Update="README.md" Pack="true" PackagePath="\README.md" />
     <None Include="..\..\LICENSE.txt" Pack="true" PackagePath="\LICENSE.txt" />
   </ItemGroup>
-
   <ItemGroup>
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="7.0.1" />
     <PackageReference Include="Microsoft.NETCore.Platforms" Version="7.0.4" />
     <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="6.0.0" />
   </ItemGroup>
-
 </Project>
