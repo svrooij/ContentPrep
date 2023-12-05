@@ -38,7 +38,8 @@ namespace SvRooij.ContentPrep
         /// <param name="outputFolder">Output path to publish the package</param>
         /// <param name="applicationDetails">(optional) Application details, this code does not load this data from the MSI file.</param>
         /// <param name="cancellationToken">(optiona) Cancellation token</param>
-        public async Task CreatePackage(
+        /// <returns><see cref="ApplicationInfo"/> of the created package</returns>
+        public async Task<ApplicationInfo?> CreatePackage(
           string folder,
           string setupFile,
           string outputFolder,
@@ -88,6 +89,7 @@ namespace SvRooij.ContentPrep
                 _logger.LogInformation("Generated detection XML file {MetadataFile}", metadataFile);
                 await Zipper.ZipDirectory(packageFolder, outputFileName, true, true);
                 _logger.LogInformation("Done creating package for {SetupFile} in {Folder} to {OutputFolder}", setupFile, folder, outputFolder);
+                return applicationInfo;
             }
             catch (Exception ex)
             {
@@ -121,8 +123,8 @@ namespace SvRooij.ContentPrep
         /// <param name="packageFile">Full path of intunewin file</param>
         /// <param name="outputFolder">Output folder</param>
         /// <param name="cancellationToken">(optional) Cancellation token</param>
-        /// <returns></returns>
-        public async Task Unpack(
+        /// <returns><see cref="ApplicationInfo"/> contained in the package</returns>
+        public async Task<ApplicationInfo?> Unpack(
             string packageFile,
             string outputFolder,
             CancellationToken cancellationToken = default)
@@ -168,6 +170,8 @@ namespace SvRooij.ContentPrep
                 }
 
                 Directory.Delete(tempFolder, true);
+
+                return applicationInfo;
 
             }
             catch (Exception ex)
