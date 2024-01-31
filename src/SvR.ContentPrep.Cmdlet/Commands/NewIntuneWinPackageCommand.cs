@@ -70,22 +70,27 @@ namespace SvR.ContentPrep.Cmdlet
         {
             try
             {
-                if (!Path.IsPathRooted(SourcePath)) {
+                if (!Path.IsPathRooted(SourcePath))
+                {
                     SourcePath = Path.Combine(Environment.CurrentDirectory, SourcePath);
                 }
-                if (!Path.IsPathRooted(DestinationPath)) {
+                if (!Path.IsPathRooted(DestinationPath))
+                {
                     DestinationPath = Path.Combine(Environment.CurrentDirectory, DestinationPath);
                 }
 
                 if (DestinationPath.StartsWith(SourcePath, StringComparison.OrdinalIgnoreCase))
                     throw new Exception("DestinationPath can't be a subfolder of SourcePath");
 
-                if (!Path.IsPathRooted(SetupFile)) {
+                if (!Path.IsPathRooted(SetupFile))
+                {
                     SetupFile = Path.Combine(SourcePath, SetupFile);
-                } else if (!SetupFile.StartsWith(SourcePath, StringComparison.OrdinalIgnoreCase)) {
+                }
+                else if (!SetupFile.StartsWith(SourcePath, StringComparison.OrdinalIgnoreCase))
+                {
                     throw new Exception("SetupFile can't be outside of SourcePath");
                 }
-                
+
                 if (!Directory.Exists(DestinationPath))
                 {
                     WriteVerbose($"Creating destination folder {DestinationPath}");
