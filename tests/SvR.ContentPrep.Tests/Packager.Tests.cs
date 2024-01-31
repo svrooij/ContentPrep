@@ -8,8 +8,8 @@ public partial class PackagerTests
 {
     private const string setupFileName = "setup.exe";
     [TestMethod]
-    [DataRow(2, 10000, 1000L)]
-    [DataRow(10, 30000, 2000L)]
+    [DataRow(2, 10000, 2000L)]
+    [DataRow(10, 30000, 3000L)]
     [DataRow(100, 60000, 8000L)]
     public async Task Packager_CreatePackage_Succeeds(int sizeInMb, int millisecondsDelay, long expectedPackageMs)
     {

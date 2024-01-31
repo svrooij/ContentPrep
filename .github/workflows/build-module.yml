@@ -54,11 +54,11 @@ jobs:
         shell: pwsh
         run: dotnet build .\src\SvR.ContentPrep.Cmdlet -c Release -o .\dist\SvRooij.ContentPrep.Cmdlet  
 
-      - name: 📝 Set module version
-        shell: pwsh
-        env:
-          version: ${{ steps.gitversion.outputs.version }}
-        run: Update-ModuleManifest -Path .\dist\SvRooij.ContentPrep.Cmdlet\SvRooij.ContentPrep.Cmdlet.psd1 -ModuleVersion $env:version
+      # - name: 📝 Set module version
+      #   shell: pwsh
+      #   env:
+      #     version: ${{ steps.gitversion.outputs.version }}
+      #   run: Update-ModuleManifest -Path .\dist\SvRooij.ContentPrep.Cmdlet\SvRooij.ContentPrep.Cmdlet.psd1 -ModuleVersion $env:version
 
       - name: 🕵️ Import and test module
         shell: pwsh
