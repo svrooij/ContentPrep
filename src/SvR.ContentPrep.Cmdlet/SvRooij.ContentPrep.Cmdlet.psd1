@@ -3,7 +3,7 @@
     RootModule = 'SvRooij.ContentPrep.Cmdlet.dll'
 
     # Version number of this module.
-    ModuleVersion = '0.1.0'
+    ModuleVersion = '0.1.4'
 
     # ID used to uniquely identify this module.
     GUID = 'a9e2730e-2b06-486c-ace6-8425afb6d64f'

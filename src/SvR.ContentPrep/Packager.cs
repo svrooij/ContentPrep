@@ -38,7 +38,8 @@ namespace SvRooij.ContentPrep
         /// <param name="outputFolder">Output path to publish the package</param>
         /// <param name="applicationDetails">(optional) Application details, this code does not load this data from the MSI file.</param>
         /// <param name="cancellationToken">(optiona) Cancellation token</param>
-        public async Task CreatePackage(
+        /// <returns><see cref="ApplicationInfo"/> of the created package</returns>
+        public async Task<ApplicationInfo?> CreatePackage(
           string folder,
           string setupFile,
           string outputFolder,
@@ -59,7 +60,7 @@ namespace SvRooij.ContentPrep
                 _logger.LogInformation("Compressing the source folder {Folder} to {EncryptedPackageLocation}", folder, encryptedPackageLocation);
                 await Zipper.ZipDirectory(folder, encryptedPackageLocation, false, false);
 
-                long setupFileSize = new FileInfo(encryptedPackageLocation).Length;
+                long filesizeBeforeEncryption = new FileInfo(encryptedPackageLocation).Length;
                 _logger.LogInformation("Generating application info");
                 // TODO: Add support for reading info from MSI files, but has to be cross platform
                 ApplicationInfo applicationInfo = applicationDetails?.MsiInfo != null
@@ -67,7 +68,7 @@ namespace SvRooij.ContentPrep
                     : new ApplicationInfo();
                 applicationInfo.FileName = EncryptedPackageFileName;
                 applicationInfo.Name = string.IsNullOrEmpty(applicationDetails?.Name) ? Path.GetFileName(setupFile) : applicationDetails!.Name!;
-                applicationInfo.UnencryptedContentSize = setupFileSize;
+                applicationInfo.UnencryptedContentSize = filesizeBeforeEncryption;
                 applicationInfo.ToolVersion = ToolVersion;
                 applicationInfo.SetupFile = setupFile.Substring(folder.Length).TrimStart(Path.DirectorySeparatorChar);
                 _logger.LogDebug("Application info: {@ApplicationInfo}", applicationInfo);
@@ -88,6 +89,7 @@ namespace SvRooij.ContentPrep
                 _logger.LogInformation("Generated detection XML file {MetadataFile}", metadataFile);
                 await Zipper.ZipDirectory(packageFolder, outputFileName, true, true);
                 _logger.LogInformation("Done creating package for {SetupFile} in {Folder} to {OutputFolder}", setupFile, folder, outputFolder);
+                return applicationInfo;
             }
             catch (Exception ex)
             {
@@ -121,8 +123,8 @@ namespace SvRooij.ContentPrep
         /// <param name="packageFile">Full path of intunewin file</param>
         /// <param name="outputFolder">Output folder</param>
         /// <param name="cancellationToken">(optional) Cancellation token</param>
-        /// <returns></returns>
-        public async Task Unpack(
+        /// <returns><see cref="ApplicationInfo"/> contained in the package</returns>
+        public async Task<ApplicationInfo?> Unpack(
             string packageFile,
             string outputFolder,
             CancellationToken cancellationToken = default)
@@ -169,6 +171,8 @@ namespace SvRooij.ContentPrep
 
                 Directory.Delete(tempFolder, true);
 
+                return applicationInfo;
+
             }
             catch (Exception ex)
             {
@@ -200,7 +204,7 @@ namespace SvRooij.ContentPrep
         {
             if (!File.Exists(setupFile))
                 throw new FileNotFoundException(string.Format(CultureInfo.InvariantCulture, "File '{0}' can not be found", setupFile));
-            if (setupFile.IndexOf(setupFolder, StringComparison.OrdinalIgnoreCase) != 0)
+            if (!setupFile.StartsWith(setupFolder, StringComparison.OrdinalIgnoreCase))
                 throw new ArgumentException(string.Format(CultureInfo.InvariantCulture, "Setup file '{0}' should be in folder '{1}'", setupFile, setupFolder));
         }
 
@@ -212,6 +216,8 @@ namespace SvRooij.ContentPrep
                 throw new ArgumentNullException(nameof(setupFile));
             if (string.IsNullOrEmpty(outputFolder))
                 throw new ArgumentNullException(nameof(outputFolder));
+            if (outputFolder.StartsWith(folder, StringComparison.OrdinalIgnoreCase))
+                throw new ArgumentException(string.Format(CultureInfo.InvariantCulture, "Output folder '{0}' can not be a subfolder of source folder '{1}'", outputFolder, folder));
             if (!Directory.Exists(folder))
                 throw new DirectoryNotFoundException(string.Format(CultureInfo.InvariantCulture, "Folder '{0}' can not be found", folder));
             CheckSetupFileExistsAndInSetupFolder(folder, setupFile);

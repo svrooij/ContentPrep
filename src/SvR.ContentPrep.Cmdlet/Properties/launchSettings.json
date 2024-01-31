@@ -3,7 +3,7 @@
     "SvR.ContentPrep.Cmdlet": {
       "executablePath": "C:\\Program Files\\PowerShell\\7\\pwsh.exe",
       "commandName": "Executable",
-      "commandLineArgs": "-noexit -command &{ Import-Module .\\SvR.ContentPrep.Cmdlet.dll -Verbose}"
+      "commandLineArgs": "-noexit -command &{ Import-Module .\\SvRooij.ContentPrep.Cmdlet.dll -Verbose}"
     }
   }
 }

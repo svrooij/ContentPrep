@@ -70,7 +70,7 @@ jobs:
       - name: ✈️ Publish to PowerShell Gallery
         shell: pwsh
         run: |
-          Import-Module .\dist\SvRooij.ContentPrep.Cmdlet\SvR.ContentPrep.Cmdlet.psd1
+          Import-Module .\dist\SvRooij.ContentPrep.Cmdlet\SvRooij.ContentPrep.Cmdlet.psd1
           Publish-Module -Path .\dist\SvRooij.ContentPrep.Cmdlet\ -NuGetApiKey ${{ secrets.PSGALLERY_API_KEY }} -Verbose
 
       # - name: Analyses
