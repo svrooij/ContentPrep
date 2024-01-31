@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using System.Management.Automation;
 using SvRooij.ContentPrep;
 namespace SvR.ContentPrep.Cmdlet
@@ -58,6 +59,10 @@ namespace SvR.ContentPrep.Cmdlet
         {
             try
             {
+                if (!Path.IsPathRooted(SourceFile))
+                    SourceFile = Path.Combine(Environment.CurrentDirectory, SourceFile);
+                if (!Path.IsPathRooted(DestinationPath))
+                    DestinationPath = Path.Combine(Environment.CurrentDirectory, DestinationPath);
                 if (!File.Exists(SourceFile))
                 {
                     WriteError(new ErrorRecord(new FileNotFoundException("File not found", SourceFile), "1", ErrorCategory.InvalidOperation, null));

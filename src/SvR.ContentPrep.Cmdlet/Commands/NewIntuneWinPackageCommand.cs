@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using System.Management.Automation;
 using SvRooij.ContentPrep;
 namespace SvR.ContentPrep.Cmdlet
@@ -69,15 +70,30 @@ namespace SvR.ContentPrep.Cmdlet
         {
             try
             {
-                var setupFile = Path.Combine(SourcePath, SetupFile);
+                if (!Path.IsPathRooted(SourcePath)) {
+                    SourcePath = Path.Combine(Environment.CurrentDirectory, SourcePath);
+                }
+                if (!Path.IsPathRooted(DestinationPath)) {
+                    DestinationPath = Path.Combine(Environment.CurrentDirectory, DestinationPath);
+                }
+
+                if (DestinationPath.StartsWith(SourcePath, StringComparison.OrdinalIgnoreCase))
+                    throw new Exception("DestinationPath can't be a subfolder of SourcePath");
+
+                if (!Path.IsPathRooted(SetupFile)) {
+                    SetupFile = Path.Combine(SourcePath, SetupFile);
+                } else if (!SetupFile.StartsWith(SourcePath, StringComparison.OrdinalIgnoreCase)) {
+                    throw new Exception("SetupFile can't be outside of SourcePath");
+                }
+                
                 if (!Directory.Exists(DestinationPath))
                 {
                     WriteVerbose($"Creating destination folder {DestinationPath}");
                     Directory.CreateDirectory(DestinationPath);
                 }
-                WriteVerbose($"Trying to create package for {setupFile}");
+                WriteVerbose($"Trying to create package for {SetupFile}");
                 ThreadAffinitiveSynchronizationContext.RunSynchronized(() =>
-                    packager.CreatePackage(SourcePath, setupFile, DestinationPath)
+                    packager.CreatePackage(SourcePath, SetupFile, DestinationPath)
                 );
             }
             catch (System.Exception ex)

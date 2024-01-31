@@ -60,7 +60,7 @@ namespace SvRooij.ContentPrep
                 _logger.LogInformation("Compressing the source folder {Folder} to {EncryptedPackageLocation}", folder, encryptedPackageLocation);
                 await Zipper.ZipDirectory(folder, encryptedPackageLocation, false, false);
 
-                long setupFileSize = new FileInfo(encryptedPackageLocation).Length;
+                long filesizeBeforeEncryption = new FileInfo(encryptedPackageLocation).Length;
                 _logger.LogInformation("Generating application info");
                 // TODO: Add support for reading info from MSI files, but has to be cross platform
                 ApplicationInfo applicationInfo = applicationDetails?.MsiInfo != null
@@ -68,7 +68,7 @@ namespace SvRooij.ContentPrep
                     : new ApplicationInfo();
                 applicationInfo.FileName = EncryptedPackageFileName;
                 applicationInfo.Name = string.IsNullOrEmpty(applicationDetails?.Name) ? Path.GetFileName(setupFile) : applicationDetails!.Name!;
-                applicationInfo.UnencryptedContentSize = setupFileSize;
+                applicationInfo.UnencryptedContentSize = filesizeBeforeEncryption;
                 applicationInfo.ToolVersion = ToolVersion;
                 applicationInfo.SetupFile = setupFile.Substring(folder.Length).TrimStart(Path.DirectorySeparatorChar);
                 _logger.LogDebug("Application info: {@ApplicationInfo}", applicationInfo);
@@ -204,7 +204,7 @@ namespace SvRooij.ContentPrep
         {
             if (!File.Exists(setupFile))
                 throw new FileNotFoundException(string.Format(CultureInfo.InvariantCulture, "File '{0}' can not be found", setupFile));
-            if (setupFile.IndexOf(setupFolder, StringComparison.OrdinalIgnoreCase) != 0)
+            if (!setupFile.StartsWith(setupFolder, StringComparison.OrdinalIgnoreCase))
                 throw new ArgumentException(string.Format(CultureInfo.InvariantCulture, "Setup file '{0}' should be in folder '{1}'", setupFile, setupFolder));
         }
 
@@ -216,6 +216,8 @@ namespace SvRooij.ContentPrep
                 throw new ArgumentNullException(nameof(setupFile));
             if (string.IsNullOrEmpty(outputFolder))
                 throw new ArgumentNullException(nameof(outputFolder));
+            if (outputFolder.StartsWith(folder, StringComparison.OrdinalIgnoreCase))
+                throw new ArgumentException(string.Format(CultureInfo.InvariantCulture, "Output folder '{0}' can not be a subfolder of source folder '{1}'", outputFolder, folder));
             if (!Directory.Exists(folder))
                 throw new DirectoryNotFoundException(string.Format(CultureInfo.InvariantCulture, "Folder '{0}' can not be found", folder));
             CheckSetupFileExistsAndInSetupFolder(folder, setupFile);

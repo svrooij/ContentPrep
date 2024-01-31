@@ -41,6 +41,8 @@ Command: `New-IntuneWinPackage`
 | `-Verbose` | Show verbose output | |
 | `-Debug` | Show debug output | |
 
+> The `-DestinationPath` must not be inside the `-SourcePath` folder.
+
 ## Decrypting `.intunewin` packages
 
 ```powershell
