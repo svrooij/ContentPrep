@@ -87,7 +87,7 @@ namespace SvRooij.ContentPrep
                     {
                         string destinationFileName = Path.Combine(destinationFolder, entry.FullName);
                         using (Stream entryStream = entry.Open())
-                        using (FileStream fileStream = new FileStream(destinationFileName, FileMode.Create, FileAccess.Write, FileShare.None, bufferSize: 4096, useAsync: true))
+                        using (FileStream fileStream = new FileStream(destinationFileName, FileMode.Create, FileAccess.Write, FileShare.None, bufferSize: 8192, useAsync: true))
                         {
                             await entryStream.CopyToAsync(fileStream);
                             fileStream.Close();

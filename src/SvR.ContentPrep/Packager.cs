@@ -118,6 +118,34 @@ namespace SvRooij.ContentPrep
         }
 
         /// <summary>
+        /// Encrypt a zip file to be uploaded to Intune programmatically, without zipping the result with the `MetaData\detections.xml` file.
+        /// </summary>
+        /// <param name="streamWithZippedSetupFiles"><see cref="Stream"/> with the zipped setup files</param>
+        /// <param name="outputStream"><see cref="Stream"/> to write the encrypted package to</param>
+        /// <param name="applicationDetails">Specify the information about the package. `SetupFile` and `Name` are mandatory.</param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        /// <remarks>Normally you would use the <see cref="CreatePackage(string, string, string, ApplicationDetails?, CancellationToken)"/> method, but if you want to upload that to Intune, you'll have to extract it anyway. <see href="https://svrooij.io/2023/08/31/publish-apps-to-intune/#extracting-the-intunewin-file">this blog</see></remarks>
+        public async Task<ApplicationInfo?> CreateUploadablePackage(
+            Stream streamWithZippedSetupFiles,
+            Stream outputStream,
+            ApplicationDetails applicationDetails,
+            CancellationToken cancellationToken = default)
+        {
+            ApplicationInfo applicationInfo = applicationDetails.MsiInfo != null
+                    ? new MsiApplicationInfo() { MsiInfo = applicationDetails.MsiInfo }
+                    : new ApplicationInfo();
+            applicationInfo.FileName = EncryptedPackageFileName;
+            applicationInfo.Name = applicationDetails.Name!;
+            applicationInfo.UnencryptedContentSize = streamWithZippedSetupFiles.Length;
+            applicationInfo.ToolVersion = ToolVersion;
+            applicationInfo.SetupFile = applicationDetails.SetupFile!;
+            applicationInfo.EncryptionInfo = await Encryptor.EncryptStreamToStreamAsync(streamWithZippedSetupFiles, outputStream, cancellationToken);
+
+            return applicationInfo;
+        }
+
+        /// <summary>
         /// Decrypt an intunewin file to a folder
         /// </summary>
         /// <param name="packageFile">Full path of intunewin file</param>
@@ -160,8 +188,8 @@ namespace SvRooij.ContentPrep
                 // Decrypt file
                 var encryptedPackage = Path.Combine(tempFolder, "IntuneWinPackage", "Contents", applicationInfo.FileName!);
                 _logger.LogDebug("Decrypting {EncryptedPackage} to {OutputFolder}", encryptedPackage, outputFolder);
-                using (FileStream encryptedFileStream = new FileStream(encryptedPackage, FileMode.Open, FileAccess.Read, FileShare.None, bufferSize: 4096, useAsync: true))
-                using (Stream decryptedStream = await Encryptor.DecryptFileAsync(encryptedFileStream, applicationInfo.EncryptionInfo.EncryptionKey!, applicationInfo.EncryptionInfo.MacKey!, cancellationToken))
+                using (FileStream encryptedFileStream = new FileStream(encryptedPackage, FileMode.Open, FileAccess.Read, FileShare.None, bufferSize: Encryptor.DefaultBufferSize, useAsync: true))
+                using (Stream decryptedStream = await Encryptor.DecryptStreamAsync(encryptedFileStream, applicationInfo.EncryptionInfo.EncryptionKey!, applicationInfo.EncryptionInfo.MacKey!, cancellationToken))
                 {
                     await Zipper.UnzipStreamAsync(decryptedStream, outputFolder, cancellationToken);
                     decryptedStream.Close();
