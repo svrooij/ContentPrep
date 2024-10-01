@@ -31,43 +31,12 @@ namespace SvRooij.ContentPrep
             using (var targetStream = new FileStream(tempLocation, FileMode.Create, FileAccess.ReadWrite, FileShare.Delete, bufferSize: DefaultBufferSize, useAsync: true))
             {
                 encryptionInfo = await EncryptStreamToStreamAsync(sourceStream, targetStream, cancellationToken);
-                //sourceStream.Close();
-                //targetStream.Close();
             }
 
             File.Delete(file);
             File.Move(tempLocation, file);
 
             return encryptionInfo;
-            // byte[] encryptionKey = CreateAesKey();
-            // byte[] hmacKey = CreateAesKey();
-            // byte[] iv = GenerateAesIV();
-
-            // cancellationToken.ThrowIfCancellationRequested();
-            // byte[] encryptedFileHash = await EncryptFileWithIVAsync(file, fileWithGuid, encryptionKey, hmacKey, iv, cancellationToken);
-
-            // byte[]? fileHash;
-            // using (SHA256 hasher = SHA256.Create())
-            // // using (FileStream fileStream = File.Open(file, FileMode.Open, FileAccess.Read, FileShare.None))
-            // using (FileStream fileStream = new FileStream(file, FileMode.Open, FileAccess.Read, FileShare.None, bufferSize: 4096, useAsync: true))
-            // {
-            //     fileHash = await hasher.ComputeHashAsync(fileStream, cancellationToken);
-            //     fileStream.Close();
-            // }
-            // cancellationToken.ThrowIfCancellationRequested();
-
-            // FileEncryptionInfo fileEncryptionInfo = new FileEncryptionInfo
-            // {
-            //     EncryptionKey = Convert.ToBase64String(encryptionKey),
-            //     MacKey = Convert.ToBase64String(hmacKey),
-            //     InitializationVector = Convert.ToBase64String(iv),
-            //     Mac = Convert.ToBase64String(encryptedFileHash),
-            //     ProfileIdentifier = ProfileIdentifier,
-            //     FileDigest = Convert.ToBase64String(fileHash),
-            //     FileDigestAlgorithm = FileDigestAlgorithm
-            // };
-            // await MoveFileAsync(fileWithGuid, file, cancellationToken);
-            // return fileEncryptionInfo;
         }
 
         /// <summary>
@@ -124,21 +93,6 @@ namespace SvRooij.ContentPrep
             return aes.IV;
         }
 
-        private static async Task<byte[]> EncryptFileWithIVAsync(
-            string sourceFile,
-            string targetFile,
-            byte[] encryptionKey,
-            byte[] hmacKey,
-            byte[] initializationVector,
-            CancellationToken cancellationToken)
-        {
-            using FileStream sourceStream = new FileStream(sourceFile, FileMode.Open, FileAccess.Read, FileShare.None, bufferSize: DefaultBufferSize, useAsync: true);
-            using FileStream targetStream = new FileStream(targetFile, FileMode.Create, FileAccess.ReadWrite, FileShare.None, bufferSize: DefaultBufferSize, useAsync: true);
-            var hash = await EncryptStreamWithIVAsync(sourceStream, targetStream, encryptionKey, hmacKey, initializationVector, cancellationToken);
-            sourceStream.Close();
-            await targetStream.FlushAsync(cancellationToken);
-            return hash;
-        }
         private static async Task<byte[]> EncryptStreamWithIVAsync(
             Stream sourceStream,
             Stream targetStream,
@@ -212,18 +166,6 @@ namespace SvRooij.ContentPrep
 
             return encryptedFileHash;
         }
-        //private static async Task MoveFileAsync(
-        //    string inputFile,
-        //    string targetFile,
-        //    CancellationToken cancellationToken)
-        //{
-        //    using (FileStream sourceStream = new FileStream(inputFile, FileMode.Open, FileAccess.Read, FileShare.None, bufferSize: 4096, useAsync: true))
-        //    using (FileStream destStream = new FileStream(targetFile, FileMode.Create, FileAccess.Write, FileShare.None, bufferSize: 4096, useAsync: true))
-        //    {
-        //        await sourceStream.CopyToAsync(destStream, 2097152, cancellationToken);
-        //    }
-        //    File.Delete(inputFile);
-        //}
 
         internal static async Task<Stream> DecryptStreamAsync(Stream inputStream, string encryptionKey, string hmacKey, CancellationToken cancellationToken)
         {
