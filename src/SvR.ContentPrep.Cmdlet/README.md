@@ -5,7 +5,8 @@ Normally you would need the closed source [Microsoft Win32-content-prep-tool](ht
 
 Since the process is not documented anywhere not all features are supported yet, but the most important ones are.
 
-> **Warning**: This is not a replacement for the Microsoft tool, it is a re-implementation of the tool based upon public available information. It is not feature complete and it might not work for your use case. If you need a tool that works, use the Microsoft tool. This library is provided as-is, without any warranty or support.
+> [!WARNING]
+> This is not a replacement for the Microsoft tool, it is a re-implementation of the tool based upon public available information. It is not feature complete and it might not work for your use case. If you need a tool that works, use the Microsoft tool. This library is provided as-is, without any warranty or support.
 
 ## Installation
 
@@ -41,6 +42,7 @@ Command: `New-IntuneWinPackage`
 | `-Verbose` | Show verbose output | |
 | `-Debug` | Show debug output | |
 
+> [!IMPORTANT]
 > The `-DestinationPath` must not be inside the `-SourcePath` folder.
 
 ## Decrypting `.intunewin` packages
