@@ -40,6 +40,10 @@ public partial class PackagerTests
         {
             throw;
         }
+        catch (TaskCanceledException)
+        {
+            Assert.Fail("Expected no timeout but got one");
+        }
         catch (Exception ex)
         {
             Assert.Fail("Expected no exceptions but got {0}", ex.GetType().Name);

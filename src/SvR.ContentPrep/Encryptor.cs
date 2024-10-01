@@ -8,27 +8,93 @@ using SvRooij.ContentPrep.Models;
 
 namespace SvRooij.ContentPrep
 {
+    /// <summary>
+    /// Encryptor class to encrypt and decrypt files
+    /// </summary>
     internal static class Encryptor
     {
         private const string ProfileIdentifier = "ProfileVersion1";
         private const string FileDigestAlgorithm = "SHA256";
+        internal const int DefaultBufferSize = 2097152;
+        /// <summary>
+        /// Encrypt a file in place and return the encryption information
+        /// </summary>
+        /// <param name="file">Input path</param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
         internal static async Task<FileEncryptionInfo> EncryptFileAsync(string file, CancellationToken cancellationToken = default)
+        {
+            // Create a temporary file to write the encrypted data to, in the same folder as the original file
+            string tempLocation = Path.Combine(Path.GetDirectoryName(file)!, $"{Path.GetFileNameWithoutExtension(file)}.tmp");
+            FileEncryptionInfo? encryptionInfo;
+            using (var sourceStream = new FileStream(file, FileMode.Open, FileAccess.ReadWrite, FileShare.Delete, bufferSize: DefaultBufferSize, useAsync: true))
+            using (var targetStream = new FileStream(tempLocation, FileMode.Create, FileAccess.ReadWrite, FileShare.Delete, bufferSize: DefaultBufferSize, useAsync: true))
+            {
+                encryptionInfo = await EncryptStreamToStreamAsync(sourceStream, targetStream, cancellationToken);
+                //sourceStream.Close();
+                //targetStream.Close();
+            }
+
+            File.Delete(file);
+            File.Move(tempLocation, file);
+
+            return encryptionInfo;
+            // byte[] encryptionKey = CreateAesKey();
+            // byte[] hmacKey = CreateAesKey();
+            // byte[] iv = GenerateAesIV();
+            
+            // cancellationToken.ThrowIfCancellationRequested();
+            // byte[] encryptedFileHash = await EncryptFileWithIVAsync(file, fileWithGuid, encryptionKey, hmacKey, iv, cancellationToken);
+
+            // byte[]? fileHash;
+            // using (SHA256 hasher = SHA256.Create())
+            // // using (FileStream fileStream = File.Open(file, FileMode.Open, FileAccess.Read, FileShare.None))
+            // using (FileStream fileStream = new FileStream(file, FileMode.Open, FileAccess.Read, FileShare.None, bufferSize: 4096, useAsync: true))
+            // {
+            //     fileHash = await hasher.ComputeHashAsync(fileStream, cancellationToken);
+            //     fileStream.Close();
+            // }
+            // cancellationToken.ThrowIfCancellationRequested();
+
+            // FileEncryptionInfo fileEncryptionInfo = new FileEncryptionInfo
+            // {
+            //     EncryptionKey = Convert.ToBase64String(encryptionKey),
+            //     MacKey = Convert.ToBase64String(hmacKey),
+            //     InitializationVector = Convert.ToBase64String(iv),
+            //     Mac = Convert.ToBase64String(encryptedFileHash),
+            //     ProfileIdentifier = ProfileIdentifier,
+            //     FileDigest = Convert.ToBase64String(fileHash),
+            //     FileDigestAlgorithm = FileDigestAlgorithm
+            // };
+            // await MoveFileAsync(fileWithGuid, file, cancellationToken);
+            // return fileEncryptionInfo;
+        }
+
+        /// <summary>
+        /// Encrypt a stream to a stream and return the encryption information
+        /// </summary>
+        /// <param name="inputStream"><see cref="Stream"/> that will be read from (requires Read and Seek), <see cref="MemoryStream"/> is advised</param>
+        /// <param name="outputStream"><see cref="Stream"/> that will be written to (requires Read, Write and Seek), <see cref="MemoryStream"/> is advised</param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        internal static async Task<FileEncryptionInfo> EncryptStreamToStreamAsync(Stream inputStream, Stream outputStream, CancellationToken cancellationToken = default)
         {
             byte[] encryptionKey = CreateAesKey();
             byte[] hmacKey = CreateAesKey();
             byte[] iv = GenerateAesIV();
-            string fileWithGuid = Path.Combine(Path.GetDirectoryName(file)!, Guid.NewGuid().ToString());
-            cancellationToken.ThrowIfCancellationRequested();
-            byte[] encryptedFileHash = await EncryptFileWithIVAsync(file, fileWithGuid, encryptionKey, hmacKey, iv, cancellationToken);
-
-            byte[]? fileHash;
+            byte[]? inputHash;
             using (SHA256 hasher = SHA256.Create())
-            // using (FileStream fileStream = File.Open(file, FileMode.Open, FileAccess.Read, FileShare.None))
-            using (FileStream fileStream = new FileStream(file, FileMode.Open, FileAccess.Read, FileShare.None, bufferSize: 4096, useAsync: true))
             {
-                fileHash = await hasher.ComputeHashAsync(fileStream, cancellationToken);
-                fileStream.Close();
+                inputHash = await hasher.ComputeHashAsync(inputStream, cancellationToken);
             }
+
+            // Rewind the input stream after hashing (which will read it to the end)
+            inputStream.Seek(0, SeekOrigin.Begin);
+            cancellationToken.ThrowIfCancellationRequested();
+
+            // Encrypt the stream and write it to the output stream
+            // The output stream will contain the hash (of the IV and the encrypted data), the IV and the encrypted data
+            byte[] encryptedFileHash = await EncryptStreamWithIVAsync(inputStream, outputStream, encryptionKey, hmacKey, iv, cancellationToken);
             cancellationToken.ThrowIfCancellationRequested();
 
             FileEncryptionInfo fileEncryptionInfo = new FileEncryptionInfo
@@ -38,10 +104,10 @@ namespace SvRooij.ContentPrep
                 InitializationVector = Convert.ToBase64String(iv),
                 Mac = Convert.ToBase64String(encryptedFileHash),
                 ProfileIdentifier = ProfileIdentifier,
-                FileDigest = Convert.ToBase64String(fileHash),
+                FileDigest = Convert.ToBase64String(inputHash),
                 FileDigestAlgorithm = FileDigestAlgorithm
             };
-            await MoveFileAsync(fileWithGuid, file, cancellationToken);
+
             return fileEncryptionInfo;
         }
 
@@ -66,56 +132,98 @@ namespace SvRooij.ContentPrep
             byte[] initializationVector,
             CancellationToken cancellationToken)
         {
+            using FileStream sourceStream = new FileStream(sourceFile, FileMode.Open, FileAccess.Read, FileShare.None, bufferSize: DefaultBufferSize, useAsync: true);
+            using FileStream targetStream = new FileStream(targetFile, FileMode.Create, FileAccess.ReadWrite, FileShare.None, bufferSize: DefaultBufferSize, useAsync: true);
+            var hash = await EncryptStreamWithIVAsync(sourceStream, targetStream, encryptionKey, hmacKey, initializationVector, cancellationToken);
+            sourceStream.Close();
+            await targetStream.FlushAsync(cancellationToken);
+            return hash;
+        }
+        private static async Task<byte[]> EncryptStreamWithIVAsync(
+            Stream sourceStream,
+            Stream targetStream,
+            byte[] encryptionKey,
+            byte[] hmacKey,
+            byte[] initializationVector,
+            CancellationToken cancellationToken)
+        {
+            if (sourceStream == null)
+            {
+                throw new ArgumentNullException(nameof(sourceStream));
+            }
+            if (targetStream == null)
+            {
+                throw new ArgumentNullException(nameof(targetStream));
+            }
+            if (sourceStream.CanRead == false) {
+                throw new ArgumentException("The source stream must be readable", nameof(sourceStream));
+            }
+            if (targetStream.CanWrite == false || targetStream.CanSeek == false || targetStream.CanRead == false) {
+                throw new ArgumentException("The target stream must support Read, Write and Seek", nameof(targetStream));
+            }
             byte[]? encryptedFileHash;
             using Aes aes = Aes.Create();
             using HMACSHA256 hmac = new HMACSHA256(hmacKey);
-            using FileStream targetFileStream = new FileStream(targetFile, FileMode.Create, FileAccess.ReadWrite, FileShare.None, bufferSize: 4096, useAsync: true);
             int offset = hmac.HashSize / 8;
-            //byte[] buffer = new byte[2097152];
             // Create an empty buffer for a specific length
             byte[] buffer = new byte[offset + initializationVector.Length];
-            // Write the empty IV to the targetFileStream
-            await targetFileStream.WriteAsync(buffer, 0, offset + initializationVector.Length, cancellationToken);
+            // Write the empty IV to the targetFileStream (empty bytes)
+            await targetStream.WriteAsync(buffer, 0, offset + initializationVector.Length, cancellationToken);
             using (ICryptoTransform cryptoTransform = aes.CreateEncryptor(encryptionKey, initializationVector))
-            using (FileStream inputFileStream = new FileStream(sourceFile, FileMode.Open, FileAccess.Read, FileShare.None, bufferSize: 4096, useAsync: true))
-            using (CryptoStream cryptoStream = new CryptoStream(targetFileStream, cryptoTransform, CryptoStreamMode.Write))
+            // Create a CryptoStream to write the encrypted data to the targetStream
+#if NET8_0_OR_GREATER
+            using (CryptoStream cryptoStream = new CryptoStream(targetStream, cryptoTransform, CryptoStreamMode.Write, leaveOpen: true))
             {
+#else
+            using (CryptoStream cryptoStream = new CryptoStream(targetStream, cryptoTransform, CryptoStreamMode.Write))
+            {
+                // Set the leaveOpen property of the CryptoStream to true
+                // Hack found at https://stackoverflow.com/a/50878853
+                // This property seems not available in the .NET Standard 2.0 version of CryptoStream
+                var prop = cryptoStream.GetType().GetField("_leaveOpen", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                prop?.SetValue(cryptoStream, true);
+#endif
+
+                // Copy the sourceStream to the cryptoStream
                 cancellationToken.ThrowIfCancellationRequested();
-                await inputFileStream.CopyToAsync(cryptoStream, 2097152, cancellationToken);
+                await sourceStream.CopyToAsync(cryptoStream, DefaultBufferSize, cancellationToken);
                 cryptoStream.FlushFinalBlock();
             }
             cancellationToken.ThrowIfCancellationRequested();
+            // Rewind the targetStream to the exact position where the IV should be written
+            targetStream.Seek(offset, SeekOrigin.Begin);
+            // Write the IV to the targetStream
+            await targetStream.WriteAsync(initializationVector, 0, initializationVector.Length, cancellationToken);
+            await targetStream.FlushAsync(cancellationToken);
+            // Rewind the targetStream to the exact position of the start of the IV (which should be included in the hash)
+            targetStream.Seek(offset, SeekOrigin.Begin);
+            // Compute the hash of the targetStream
+            byte[] hash = await hmac.ComputeHashAsync(targetStream, cancellationToken);
+            encryptedFileHash = hash;
+            // Rewind the targetStream to the beginning
+            targetStream.Seek(0L, SeekOrigin.Begin);
+            // Write the hash to the targetStream
+            await targetStream.WriteAsync(hash, 0, hash.Length, cancellationToken);
+            await targetStream.FlushAsync(cancellationToken);
 
-            // Re-open the file to write the hash and the IV
-            using (FileStream encryptedFileStream = new FileStream(targetFile, FileMode.Open, FileAccess.ReadWrite, FileShare.None, bufferSize: 4096, useAsync: true))
-            {
-                encryptedFileStream.Seek(offset, SeekOrigin.Begin);
-                await encryptedFileStream.WriteAsync(initializationVector, 0, initializationVector.Length, cancellationToken);
-                encryptedFileStream.Seek(offset, SeekOrigin.Begin);
-                byte[] hash = await hmac.ComputeHashAsync(encryptedFileStream, cancellationToken);
-                encryptedFileHash = hash;
-                encryptedFileStream.Seek(0L, SeekOrigin.Begin);
-                await encryptedFileStream.WriteAsync(hash, 0, hash.Length, cancellationToken);
-                encryptedFileStream.Close();
-            }
+            // At this point the targetStream will the hash (of the IV and the encrypted data), the IV and the encrypted data
 
             return encryptedFileHash;
         }
+        //private static async Task MoveFileAsync(
+        //    string inputFile,
+        //    string targetFile,
+        //    CancellationToken cancellationToken)
+        //{
+        //    using (FileStream sourceStream = new FileStream(inputFile, FileMode.Open, FileAccess.Read, FileShare.None, bufferSize: 4096, useAsync: true))
+        //    using (FileStream destStream = new FileStream(targetFile, FileMode.Create, FileAccess.Write, FileShare.None, bufferSize: 4096, useAsync: true))
+        //    {
+        //        await sourceStream.CopyToAsync(destStream, 2097152, cancellationToken);
+        //    }
+        //    File.Delete(inputFile);
+        //}
 
-        private static async Task MoveFileAsync(
-            string inputFile,
-            string targetFile,
-            CancellationToken cancellationToken)
-        {
-            using (FileStream sourceStream = new FileStream(inputFile, FileMode.Open, FileAccess.Read, FileShare.None, bufferSize: 4096, useAsync: true))
-            using (FileStream destStream = new FileStream(targetFile, FileMode.Create, FileAccess.Write, FileShare.None, bufferSize: 4096, useAsync: true))
-            {
-                await sourceStream.CopyToAsync(destStream, 2097152, cancellationToken);
-            }
-            File.Delete(inputFile);
-        }
-
-        internal static async Task<Stream> DecryptFileAsync(Stream inputStream, string encryptionKey, string hmacKey, CancellationToken cancellationToken)
+        internal static async Task<Stream> DecryptStreamAsync(Stream inputStream, string encryptionKey, string hmacKey, CancellationToken cancellationToken)
         {
             var resultStream = new MemoryStream();
             var encryptionKeyBytes = Convert.FromBase64String(encryptionKey);
@@ -137,7 +245,7 @@ namespace SvRooij.ContentPrep
 
             using ICryptoTransform cryptoTransform = aes.CreateDecryptor(encryptionKeyBytes, iv);
             using CryptoStream cryptoStream = new CryptoStream(inputStream, cryptoTransform, CryptoStreamMode.Read);
-            await cryptoStream.CopyToAsync(resultStream, 2097152, cancellationToken);
+            await cryptoStream.CopyToAsync(resultStream, DefaultBufferSize, cancellationToken);
 
             resultStream.Seek(0, SeekOrigin.Begin);
             return resultStream;

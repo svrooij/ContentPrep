@@ -13,6 +13,11 @@ namespace SvRooij.ContentPrep.Models
         /// Application name.
         /// </summary>
         public string? Name { get; set; }
+
+        /// <summary>
+        /// Relative path to the setup file or script
+        /// </summary>
+        public string? SetupFile { get; set; }
         /// <summary>
         /// (optional) Msi info.
         /// </summary>
