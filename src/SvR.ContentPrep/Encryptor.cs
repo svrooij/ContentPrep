@@ -42,7 +42,7 @@ namespace SvRooij.ContentPrep
             // byte[] encryptionKey = CreateAesKey();
             // byte[] hmacKey = CreateAesKey();
             // byte[] iv = GenerateAesIV();
-            
+
             // cancellationToken.ThrowIfCancellationRequested();
             // byte[] encryptedFileHash = await EncryptFileWithIVAsync(file, fileWithGuid, encryptionKey, hmacKey, iv, cancellationToken);
 
@@ -155,10 +155,12 @@ namespace SvRooij.ContentPrep
             {
                 throw new ArgumentNullException(nameof(targetStream));
             }
-            if (sourceStream.CanRead == false) {
+            if (sourceStream.CanRead == false)
+            {
                 throw new ArgumentException("The source stream must be readable", nameof(sourceStream));
             }
-            if (targetStream.CanWrite == false || targetStream.CanSeek == false || targetStream.CanRead == false) {
+            if (targetStream.CanWrite == false || targetStream.CanSeek == false || targetStream.CanRead == false)
+            {
                 throw new ArgumentException("The target stream must support Read, Write and Seek", nameof(targetStream));
             }
             byte[]? encryptedFileHash;

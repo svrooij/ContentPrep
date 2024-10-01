@@ -142,7 +142,7 @@ namespace SvRooij.ContentPrep
             applicationInfo.SetupFile = applicationDetails.SetupFile!;
             applicationInfo.EncryptionInfo = await Encryptor.EncryptStreamToStreamAsync(streamWithZippedSetupFiles, outputStream, cancellationToken);
 
-            return applicationInfo; 
+            return applicationInfo;
         }
 
         /// <summary>
