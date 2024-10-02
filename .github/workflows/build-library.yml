@@ -122,9 +122,11 @@ jobs:
       run: dotnet restore
 
     - name: 🛠️ Build code
+      shell: pwsh
       run: dotnet build ./src/SvR.ContentPrep/SvR.ContentPrep.csproj --configuration Release --no-restore -p:Version=$("${{ github.ref_name }}".Substring(1))
 
     - name: 📦 Pack library
+      shell: pwsh
       run: dotnet pack ./src/SvR.ContentPrep/SvR.ContentPrep.csproj --configuration Release --no-build -p:Version=$("${{ github.ref_name }}".Substring(1))
 
     - name: ✈️ Publish SvR.ContentPrep to nuget.org
