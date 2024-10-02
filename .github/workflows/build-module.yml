@@ -8,20 +8,23 @@ on:
       - 'src/SvR.ContentPrep/**'
       - 'src/SvR.ContentPrep.Cmdlet/**'
       - '.github/workflows/build-module.yml'
+    tags:
+      - v*
   workflow_dispatch:
 
 jobs:
   build-and-publish:
     runs-on: windows-latest
+    if: startsWith(github.ref, 'refs/tags/')
     steps:
       - name: 👨‍💻 Check-out code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         # Specify depth because of GitVersion
         with:
           fetch-depth: 0
 
       - name: 👨‍🔧 Setup .NET Core SDK
-        uses: actions/setup-dotnet@v1
+        uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '8.x'
 
@@ -29,7 +32,7 @@ jobs:
         run: echo "::add-matcher::.github/matchers/dotnet.json"
 
       - name: 🦸‍♂️ Restore steriods
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ~/.nuget/packages
           # Look to see if there is a cache hit for the corresponding requirements file
@@ -49,16 +52,19 @@ jobs:
 
       - name: 🎒 Load packages
         run: dotnet restore
+      
+      - name: 📝 Set module version
+        shell: pwsh
+        id: version
+        run: |
+          $version = "${{ github.ref_name }}".Substring(1)
+          $module = Get-Content -Path src\SvR.ContentPrep.Cmdlet\SvRooij.ContentPrep.Cmdlet.psd1
+          $module = $module -replace 'ModuleVersion = ''\d+\.\d+\.\d+''', "ModuleVersion = '$version'"
+          $module | Set-Content -Path src\SvR.ContentPrep.Cmdlet\SvRooij.ContentPrep.Cmdlet.psd1
 
       - name: 🛠️ Build PowerShell module
         shell: pwsh
-        run: dotnet build .\src\SvR.ContentPrep.Cmdlet -c Release -o .\dist\SvRooij.ContentPrep.Cmdlet  
-
-      # - name: 📝 Set module version
-      #   shell: pwsh
-      #   env:
-      #     version: ${{ steps.gitversion.outputs.version }}
-      #   run: Update-ModuleManifest -Path .\dist\SvRooij.ContentPrep.Cmdlet\SvRooij.ContentPrep.Cmdlet.psd1 -ModuleVersion $env:version
+        run: dotnet build .\src\SvR.ContentPrep.Cmdlet\SvR.ContentPrep.Cmdlet.csproj -c Release -p:Version=$("${{ github.ref_name }}".Substring(1)) -o .\dist\SvRooij.ContentPrep.Cmdlet  
 
       - name: 🕵️ Import and test module
         shell: pwsh

@@ -4,15 +4,15 @@ on:
   push:
     branches:
       - main
-      - develop
       - feature/*
     paths:
       - 'src/SvR.ContentPrep/**'
       - '.github/workflows/build-library.yml'
+    tags:
+      - v*
   pull_request:
     branches:
       - main
-      - develop
     paths:
       - 'src/SvR.ContentPrep/**'
       - 'tests/**'
@@ -29,10 +29,10 @@ jobs:
       checks: write
     steps:
       - name: 👨‍💻 Check-out code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: 👨‍🔧 Setup .NET Core SDK
-        uses: actions/setup-dotnet@v3
+        uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 8.x
 
@@ -40,7 +40,7 @@ jobs:
         run: echo "::add-matcher::.github/matchers/dotnet.json"
 
       - name: 🦸‍♂️ Restore steriods
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ~/.nuget/packages
           # Look to see if there is a cache hit for the corresponding requirements file
@@ -59,12 +59,26 @@ jobs:
         run: dotnet test --configuration Release -v minimal --no-restore --logger GitHubActions '/p:CollectCoverage=true;CoverletOutputFormat="json,lcov,cobertura";MergeWith=${{github.workspace}}/coverage.json;CoverletOutput=${{github.workspace}}/coverage' -- RunConfiguration.CollectSourceInformation=true
 
       - name: 📝 Code Coverage report
+        env:
+          REPORTGENERATOR_LICENSE: ${{ secrets.REPORTGENERATOR_LICENSE }}
         run: |
-          dotnet tool install --global dotnet-reportgenerator-globaltool --version 5.1.23
+          dotnet tool install --global dotnet-reportgenerator-globaltool --version 5.3.10
           reportgenerator -reports:${{github.workspace}}/coverage.cobertura.xml -targetdir:${{github.workspace}}/report -reporttypes:MarkdownSummaryGithub -filefilters:-*.g.cs "-classfilters:-WixSharp.*;-WingetIntune.Os.*;-WingetIntune.Internal.MsStore.*" -verbosity:Warning
           sed -i 's/# Summary/## 📝 Code Coverage/g' ${{github.workspace}}/report/SummaryGithub.md
           sed -i 's/## Coverage/### 📝 Code Coverage details/g' ${{github.workspace}}/report/SummaryGithub.md
           cat ${{github.workspace}}/report/*.md >> $GITHUB_STEP_SUMMARY
+
+  lint:
+    name: 📝 Lint code
+    runs-on: ubuntu-latest
+    steps:
+      - name: 👨‍💻 Check-out code
+        uses: actions/checkout@v4
+
+      - name: 👨‍🔧 Setup .NET Core SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.x
 
       - name: 📃 Check code formatting
         if: always()
@@ -73,32 +87,30 @@ jobs:
   publish:
     name: 📦 Publish nuget library
     runs-on: ubuntu-latest
-    if: (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/dev') && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
-    needs: [test]
+    if: startsWith(github.ref, 'refs/tags/')
+    needs: [test, lint]
     steps:
     - name: 👨‍💻 Check-out code
-      uses: actions/checkout@v3
-      with:
-        fetch-depth: 0
+      uses: actions/checkout@v4
 
     - name: 👨‍🔧 Setup .NET Core SDK
-      uses: actions/setup-dotnet@v3
+      uses: actions/setup-dotnet@v4
       with:
         dotnet-version: 8.x
 
-    - name: 🛠️ Compute version with GitVersion
-      run: |
-        dotnet tool install --global GitVersion.Tool --version 5.*
-        echo "## 📦 Calculated version" >> $GITHUB_STEP_SUMMARY
-        echo "" >> $GITHUB_STEP_SUMMARY
-        dotnet-gitversion /updateprojectfiles /output buildserver /nofetch
-        dotnet-gitversion /nofetch /output json /showvariable NuGetVersionV2 >> $GITHUB_STEP_SUMMARY
+    # - name: 🛠️ Compute version with GitVersion
+    #   run: |
+    #     dotnet tool install --global GitVersion.Tool --version 5.*
+    #     echo "## 📦 Calculated version" >> $GITHUB_STEP_SUMMARY
+    #     echo "" >> $GITHUB_STEP_SUMMARY
+    #     dotnet-gitversion /updateprojectfiles /output buildserver /nofetch
+    #     dotnet-gitversion /nofetch /output json /showvariable NuGetVersionV2 >> $GITHUB_STEP_SUMMARY
 
     - name: 🔍 Enable problem matchers
       run: echo "::add-matcher::.github/matchers/dotnet.json"
 
     - name: 🦸‍♂️ Restore steriods
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
         path: ~/.nuget/packages
         # Look to see if there is a cache hit for the corresponding requirements file
@@ -110,10 +122,10 @@ jobs:
       run: dotnet restore
 
     - name: 🛠️ Build code
-      run: dotnet build --configuration Release --no-restore ./src/SvR.ContentPrep/SvR.ContentPrep.csproj
+      run: dotnet build ./src/SvR.ContentPrep/SvR.ContentPrep.csproj --configuration Release --no-restore -p:Version=$("${{ github.ref_name }}".Substring(1))
 
     - name: 📦 Pack library
-      run: dotnet pack --configuration Release --no-build ./src/SvR.ContentPrep/SvR.ContentPrep.csproj
+      run: dotnet pack ./src/SvR.ContentPrep/SvR.ContentPrep.csproj --configuration Release --no-build -p:Version=$("${{ github.ref_name }}".Substring(1))
 
     - name: ✈️ Publish SvR.ContentPrep to nuget.org
       run: dotnet nuget push ./src/SvR.ContentPrep/bin/Release/SvRooij.ContentPrep.*.nupkg -k $NUGET_AUTH_TOKEN -s https://api.nuget.org/v3/index.json
