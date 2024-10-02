@@ -19,8 +19,8 @@
     <Title>Content Prep library</Title>
   </PropertyGroup>
   <ItemGroup>
-    <None Update="README.md" Pack="true" PackagePath="\README.md" />
-    <None Include="..\..\LICENSE.txt" Pack="true" PackagePath="\LICENSE.txt" />
+    <None Include="README.md" Pack="true" PackagePath="\" />
+    <None Include="..\..\LICENSE.txt" Pack="true" PackagePath="\" />
   </ItemGroup>
   <ItemGroup Condition="'$(TargetFramework)'=='netstandard2.0'">
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="7.0.1" />
