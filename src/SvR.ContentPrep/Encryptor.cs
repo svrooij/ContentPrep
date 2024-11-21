@@ -93,6 +93,19 @@ namespace SvRooij.ContentPrep
             return aes.IV;
         }
 
+        /// <summary>
+        /// Input stream will be encrypted and written to the target stream. The target stream will contain the hash (32 bytes) (of the IV and the encrypted data), the IV (16 bytes) and the encrypted data
+        /// </summary>
+        /// <param name="sourceStream">Input stream, needs Seek and Read</param>
+        /// <param name="targetStream">Output stream, needs seek and Read and Write</param>
+        /// <param name="encryptionKey">AES Encryption key</param>
+        /// <param name="hmacKey">Some random data to compute an unique hash and validate the input afterwards</param>
+        /// <param name="initializationVector">AES initialization vector</param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        /// <remarks>If the output stream is not 48 bytes bigger then the input stream, something is wrong</remarks>
+        /// <exception cref="ArgumentNullException"></exception>
+        /// <exception cref="ArgumentException"></exception>
         private static async Task<byte[]> EncryptStreamWithIVAsync(
             Stream sourceStream,
             Stream targetStream,
@@ -120,11 +133,15 @@ namespace SvRooij.ContentPrep
             byte[]? encryptedFileHash;
             using Aes aes = Aes.Create();
             using HMACSHA256 hmac = new HMACSHA256(hmacKey);
-            int offset = hmac.HashSize / 8;
+            int hashSize = hmac.HashSize / 8; //32 bytes
+            int ivLength = initializationVector.Length; // 16 bytes
             // Create an empty buffer for a specific length
-            byte[] buffer = new byte[offset + initializationVector.Length];
-            // Write the empty IV to the targetFileStream (empty bytes)
-            await targetStream.WriteAsync(buffer, 0, offset + initializationVector.Length, cancellationToken);
+            byte[] buffer = new byte[hashSize];
+            // Write the empty hash (empty bytes) and IV to the targetFileStream 
+            await targetStream.WriteAsync(buffer, 0, buffer.Length, cancellationToken);
+            await targetStream.WriteAsync(initializationVector, 0, ivLength, cancellationToken);
+            await targetStream.FlushAsync(cancellationToken);
+            // At this point the targetStream will contain the empty hash (32 bytes) and the IV (16 bytes)
             using (ICryptoTransform cryptoTransform = aes.CreateEncryptor(encryptionKey, initializationVector))
             // Create a CryptoStream to write the encrypted data to the targetStream
 #if NET8_0_OR_GREATER
@@ -146,13 +163,15 @@ namespace SvRooij.ContentPrep
                 cryptoStream.FlushFinalBlock();
             }
             cancellationToken.ThrowIfCancellationRequested();
+
             // Rewind the targetStream to the exact position where the IV should be written
-            targetStream.Seek(offset, SeekOrigin.Begin);
-            // Write the IV to the targetStream
-            await targetStream.WriteAsync(initializationVector, 0, initializationVector.Length, cancellationToken);
-            await targetStream.FlushAsync(cancellationToken);
+            //targetStream.Seek(hashSize, SeekOrigin.Begin);
+            //// Write the IV to the targetStream
+            //await targetStream.WriteAsync(initializationVector, 0, initializationVector.Length, cancellationToken);
+            //await targetStream.FlushAsync(cancellationToken);
+
             // Rewind the targetStream to the exact position of the start of the IV (which should be included in the hash)
-            targetStream.Seek(offset, SeekOrigin.Begin);
+            targetStream.Seek(hashSize, SeekOrigin.Begin);
             // Compute the hash of the targetStream
             byte[] hash = await hmac.ComputeHashAsync(targetStream, cancellationToken);
             encryptedFileHash = hash;
@@ -167,6 +186,15 @@ namespace SvRooij.ContentPrep
             return encryptedFileHash;
         }
 
+        /// <summary>
+        /// Validate and decrypt a stream using the encryptionKey and hmacKey
+        /// </summary>
+        /// <param name="inputStream"></param>
+        /// <param name="encryptionKey">Base64 representation of the encryption key</param>
+        /// <param name="hmacKey">Base64 encoded representation of the hmacKey</param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        /// <exception cref="InvalidDataException">If the hash does not match it will throw an error</exception>
         internal static async Task<Stream> DecryptStreamAsync(Stream inputStream, string encryptionKey, string hmacKey, CancellationToken cancellationToken)
         {
             var resultStream = new MemoryStream();
@@ -183,10 +211,14 @@ namespace SvRooij.ContentPrep
             {
                 throw new InvalidDataException("Hashes do not match");
             }
+            // Go to end of the hash
             inputStream.Seek(offset, SeekOrigin.Begin);
+
+            // Read the IV from the stream (16 pytes)
             byte[] iv = new byte[aes.IV.Length];
             await inputStream.ReadAsync(iv, 0, iv.Length, cancellationToken);
 
+            // At this point the inputStream is at the start of the encrypted data
             using ICryptoTransform cryptoTransform = aes.CreateDecryptor(encryptionKeyBytes, iv);
             using CryptoStream cryptoStream = new CryptoStream(inputStream, cryptoTransform, CryptoStreamMode.Read);
             await cryptoStream.CopyToAsync(resultStream, DefaultBufferSize, cancellationToken);
