@@ -18,7 +18,7 @@ public static class TestHelper
         Random rnd = new Random();
         byte[] data = new byte[1024];
         await using var fs = new FileStream(tempFilename, FileMode.OpenOrCreate, FileAccess.Write, FileShare.Read,
-            bufferSize: 4096, useAsync: true);
+            bufferSize: 8192, useAsync: true);
         int iterations = sizeInMb * 1024;
         for (int i = 0; i < iterations; i++)
         {

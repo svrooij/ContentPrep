@@ -118,7 +118,7 @@ namespace SvRooij.ContentPrep
         }
 
         /// <summary>
-        /// Encrypt a zip file to be uploaded to Intune programmatically, without zipping the result with the `MetaData\detections.xml` file.
+        /// Encrypt a zip file to be uploaded to Intune programmatically, without zipping the result with the `MetaData\detections.xml` file. The output stream should be exactly 48 bytes larger than the input stream. Because it will have the hash (32 bytes) and the iv (16 bytes) prefixed.
         /// </summary>
         /// <param name="streamWithZippedSetupFiles"><see cref="Stream"/> with the zipped setup files</param>
         /// <param name="outputStream"><see cref="Stream"/> to write the encrypted package to</param>
@@ -205,6 +205,50 @@ namespace SvRooij.ContentPrep
             catch (Exception ex)
             {
                 _logger.LogWarning(ex, "Error unpacking intunewin at {PackageFile} to {OutputFolder}", packageFile, outputFolder);
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// Decrypt and unpack a stream to a folder
+        /// </summary>
+        /// <param name="encryptedStream">Encrypted file stream, needs CanRead and CanSeek. Hash (32 bytes) + IV (16 bytes) + encrypted data</param>
+        /// <param name="outputFolder">Folder to extract the contents to</param>
+        /// <param name="encryptionInfo">Encryption info as generated upon encrypting. Only the `EncryptionKey` and the `MacKey` are required.</param>
+        /// <param name="cancellationToken">Cancellation token if your want to be able to cancel this request.</param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentNullException"></exception>
+        /// <exception cref="ArgumentException"></exception>
+        /// <exception cref="InvalidDataException"></exception>
+        public async Task<bool> DecryptAndUnpackStreamToFolder(Stream encryptedStream, string outputFolder, FileEncryptionInfo encryptionInfo, CancellationToken cancellationToken = default)
+        {
+            if (encryptedStream == null)
+                throw new ArgumentNullException(nameof(encryptedStream));
+            if (string.IsNullOrEmpty(outputFolder))
+                throw new ArgumentNullException(nameof(outputFolder));
+            if (encryptionInfo == null)
+                throw new ArgumentNullException(nameof(encryptionInfo));
+            if (!encryptedStream.CanRead || !encryptedStream.CanSeek)
+                throw new ArgumentException("Stream can not be read or seeked in", nameof(encryptedStream));
+            if (encryptedStream.Length < 49)
+                throw new InvalidDataException("Stream is too short to contain a valid encryption header");
+            _logger.LogDebug("Decrypting stream to {OutputFolder}", outputFolder);
+
+            long streamLength = encryptedStream.Length;
+
+            try
+            {
+                using (Stream decryptedStream = await Encryptor.DecryptStreamAsync(encryptedStream, encryptionInfo.EncryptionKey!, encryptionInfo.MacKey!, cancellationToken))
+                {
+                    await Zipper.UnzipStreamAsync(decryptedStream, outputFolder, cancellationToken);
+                    //decryptedStream.Close();
+                    _logger.LogInformation("Unpacked stream of size {StreamSize} to {OutputFolder}", streamLength, outputFolder);
+                }
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Error decrypting stream to folder {OutputFolder}", outputFolder);
                 throw;
             }
         }
