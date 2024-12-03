@@ -82,9 +82,9 @@ namespace SvRooij.ContentPrep
 
         private static byte[] CreateAesKey()
         {
-            using AesCryptoServiceProvider cryptoServiceProvider = new AesCryptoServiceProvider();
-            cryptoServiceProvider.GenerateKey();
-            return cryptoServiceProvider.Key;
+            using Aes aes = Aes.Create();
+            aes.GenerateKey();
+            return aes.Key;
         }
 
         private static byte[] GenerateAesIV()
@@ -160,7 +160,14 @@ namespace SvRooij.ContentPrep
                 // Copy the sourceStream to the cryptoStream
                 cancellationToken.ThrowIfCancellationRequested();
                 await sourceStream.CopyToAsync(cryptoStream, DefaultBufferSize, cancellationToken);
+#if NET6_0_OR_GREATER
+                await cryptoStream.FlushFinalBlockAsync(cancellationToken);
+#else
                 cryptoStream.FlushFinalBlock();
+#endif
+                // not sure if this is needed, but because we want to keep the stream open, it's better to flush anyway.
+                await cryptoStream.FlushAsync(cancellationToken);
+                await targetStream.FlushAsync(cancellationToken);
             }
             cancellationToken.ThrowIfCancellationRequested();
 
@@ -173,17 +180,17 @@ namespace SvRooij.ContentPrep
             // Rewind the targetStream to the exact position of the start of the IV (which should be included in the hash)
             targetStream.Seek(hashSize, SeekOrigin.Begin);
             // Compute the hash of the targetStream
-            byte[] hash = await hmac.ComputeHashAsync(targetStream, cancellationToken);
+            byte[]? hash = await hmac.ComputeHashAsync(targetStream, cancellationToken);
             encryptedFileHash = hash;
             // Rewind the targetStream to the beginning
             targetStream.Seek(0L, SeekOrigin.Begin);
             // Write the hash to the targetStream
-            await targetStream.WriteAsync(hash, 0, hash.Length, cancellationToken);
+            await targetStream.WriteAsync(hash, 0, hash!.Length, cancellationToken);
             await targetStream.FlushAsync(cancellationToken);
 
             // At this point the targetStream will the hash (of the IV and the encrypted data), the IV and the encrypted data
 
-            return encryptedFileHash;
+            return encryptedFileHash!;
         }
 
         /// <summary>
@@ -205,7 +212,7 @@ namespace SvRooij.ContentPrep
             int offset = hmac.HashSize / 8;
             byte[] buffer = new byte[offset];
             await inputStream.ReadAsync(buffer, 0, offset, cancellationToken);
-            byte[] hash = await hmac.ComputeHashAsync(inputStream, cancellationToken);
+            byte[] hash = (await hmac.ComputeHashAsync(inputStream, cancellationToken))!;
 
             if (!buffer.CompareHashes(hash))
             {
@@ -230,7 +237,7 @@ namespace SvRooij.ContentPrep
 
     internal static class HashAlgorithmExtensions
     {
-        internal static async Task<byte[]> ComputeHashAsync(this HashAlgorithm hashAlgorithm, Stream stream, CancellationToken cancellationToken)
+        internal static async Task<byte[]?> ComputeHashAsync(this HashAlgorithm hashAlgorithm, Stream stream, CancellationToken cancellationToken)
         {
             byte[] buffer = new byte[4096];
             int bytesRead;

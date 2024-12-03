@@ -74,18 +74,18 @@ namespace SvRooij.ContentPrep.Models
         {
             using (StringReader input = new StringReader(xml))
             {
-                return ApplicationInfo.FromXml(input);
+                return ApplicationInfo.FromXml(input)!;
             }
         }
 
-        internal static ApplicationInfo FromXml(TextReader textReader)
+        internal static ApplicationInfo? FromXml(TextReader textReader)
         {
-            return (ApplicationInfo)new XmlSerializer(typeof(ApplicationInfo)).Deserialize(textReader);
+            return new XmlSerializer(typeof(ApplicationInfo)).Deserialize(textReader) as ApplicationInfo;
         }
 
-        internal static ApplicationInfo FromXml(Stream xml)
+        internal static ApplicationInfo? FromXml(Stream xml)
         {
-            return (ApplicationInfo)new XmlSerializer(typeof(ApplicationInfo)).Deserialize(xml);
+            return new XmlSerializer(typeof(ApplicationInfo)).Deserialize(xml) as ApplicationInfo;
         }
     }
 }

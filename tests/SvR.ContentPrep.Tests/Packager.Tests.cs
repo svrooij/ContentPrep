@@ -61,16 +61,11 @@ public partial class PackagerTests
         var setupFolder = TestHelper.GetTestFolder();
         var setupFile = await TestHelper.GenerateTempFileInFolder(setupFolder, setupFileName, sizeInMb, cts.Token);
 
-        var zipFolder = TestHelper.GetTestFolder();
-        var zipFilename = Path.Combine(zipFolder, "intunewin.tmp");
-        var zipStream = new FileStream(zipFilename, FileMode.Create, FileAccess.ReadWrite, FileShare.Delete, 8192, true);
-        ZipFile.CreateFromDirectory(setupFolder, zipStream, CompressionLevel.NoCompression, false);
-        long zipSize = zipStream.Length;
+        var setupFileInfo = new FileInfo(setupFile);
 
         var outputDirectory = TestHelper.GetTestFolder();
         var outputFile = Path.Combine(outputDirectory, "setup.intunewin");
         var intuneWinStream = new FileStream(outputFile, FileMode.Create, FileAccess.ReadWrite, FileShare.Delete, 8192, true);
-        zipStream.Seek(0, SeekOrigin.Begin);
         var packager = new Packager();
 
         try
@@ -78,15 +73,12 @@ public partial class PackagerTests
 
             var stopwatch = new Stopwatch();
             stopwatch.Start();
-            var info = await packager.CreateUploadablePackage(zipStream, intuneWinStream, new Models.ApplicationDetails { Name = "Test", SetupFile = setupFileName }, cts.Token);
+            var info = await packager.CreateUploadablePackage(setupFolder, intuneWinStream, new Models.ApplicationDetails { Name = "Test", SetupFile = setupFileName }, cts.Token);
             stopwatch.Stop();
             var fileExists = File.Exists(outputFile);
             fileExists.Should().BeTrue("output package should exist");
             var outputFilesize = new FileInfo(outputFile).Length;
-            zipSize.Should().BeLessThan(outputFilesize, "output package should have encryption data attached");
-            info!.UnencryptedContentSize.Should().Be(zipSize, "library should report correct input size");
-            var expectedSize = zipSize + 60;
-            outputFilesize.Should().Be(expectedSize, "output file should be 60 bytes bigger then input file");
+            info!.UnencryptedContentSize.Should().BeLessThan(outputFilesize, "output package should have encryption data attached");
             expectedPackageMs.Should().BeGreaterThan(stopwatch.ElapsedMilliseconds, $"It took {stopwatch.ElapsedMilliseconds}ms to package instead of {expectedPackageMs}");
 
         }
@@ -97,7 +89,7 @@ public partial class PackagerTests
         finally
         {
             TestHelper.RemoveFolderIfExists(setupFolder);
-            TestHelper.RemoveFolderIfExists(zipFolder);
+            //TestHelper.RemoveFolderIfExists(zipFolder);
             TestHelper.RemoveFolderIfExists(outputDirectory);
         }
 

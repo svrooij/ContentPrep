@@ -19,7 +19,11 @@ namespace SvRooij.ContentPrep
         internal const string PackageFileExtension = ".intunewin";
         // Version of the latest IntuneWinAppUtil tool
         internal const string ToolVersion = "1.8.4.0";
-        internal const string EncryptedPackageFileName = "IntunePackage.intunewin";
+
+        /// <summary>
+        /// Mandatory filename for the encrypted package
+        /// </summary>
+        public const string EncryptedPackageFileName = "IntunePackage.intunewin";
 
         /// <summary>
         /// Creates a new instance of the Packager class
@@ -143,6 +147,38 @@ namespace SvRooij.ContentPrep
             applicationInfo.EncryptionInfo = await Encryptor.EncryptStreamToStreamAsync(streamWithZippedSetupFiles, outputStream, cancellationToken);
 
             return applicationInfo;
+        }
+
+        /// <summary>
+        /// Package a folder to an inner intunewin file
+        /// </summary>
+        /// <param name="folderToPackage">Location you want to package.</param>
+        /// <param name="outputStream">Stream to return the uploadable package to.</param>
+        /// <param name="applicationDetails">Specify the information about the package. `SetupFile` and `Name` are mandatory.</param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        /// <remarks>Normally you would use the <see cref="CreatePackage(string, string, string, ApplicationDetails?, CancellationToken)"/> method, but if you want to upload that to Intune, you'll have to extract it anyway. <see href="https://svrooij.io/2023/08/31/publish-apps-to-intune/#extracting-the-intunewin-file">this blog</see></remarks>
+        public async Task<ApplicationInfo?> CreateUploadablePackage(
+            string folderToPackage,
+            Stream outputStream,
+            ApplicationDetails applicationDetails,
+            CancellationToken cancellationToken = default)
+        {
+            string tempFolder = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+            string encryptedPackageLocation = Path.Combine(tempFolder, EncryptedPackageFileName);
+            try
+            {
+                await Zipper.ZipDirectory(folderToPackage, encryptedPackageLocation, false, false);
+                using (FileStream fileStream = new FileStream(encryptedPackageLocation, FileMode.Open, FileAccess.Read, FileShare.None, bufferSize: 4096, useAsync: true))
+                {
+                    return await CreateUploadablePackage(fileStream, outputStream, applicationDetails, cancellationToken);
+                }
+            }
+            finally
+            {
+                if (File.Exists(encryptedPackageLocation))
+                    File.Delete(encryptedPackageLocation);
+            }
         }
 
         /// <summary>
