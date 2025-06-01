@@ -1,7 +1,12 @@
 {
   "profiles": {
-    "SvR.ContentPrep.Cmdlet": {
+    "Debug Ps7": {
       "executablePath": "C:\\Program Files\\PowerShell\\7\\pwsh.exe",
+      "commandName": "Executable",
+      "commandLineArgs": "-noexit -command &{ Import-Module .\\SvRooij.ContentPrep.Cmdlet.dll -Verbose}"
+    },
+    "Debug Windows PowerShell": {
+      "executablePath": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
       "commandName": "Executable",
       "commandLineArgs": "-noexit -command &{ Import-Module .\\SvRooij.ContentPrep.Cmdlet.dll -Verbose}"
     }

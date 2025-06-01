@@ -40,15 +40,15 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-nuget  
 
-      - name: 🛠️ Compute version with GitVersion
-        id: gitversion
-        shell: pwsh
-        run: |
-          dotnet tool install --global GitVersion.Tool --version 5.*
-          # echo "## 📦 Calculated version" >> $GITHUB_STEP_SUMMARY
-          # echo "" >> $GITHUB_STEP_SUMMARY
-          $gitversion = & "dotnet-gitversion.exe" "/updateprojectfiles" "/output" "buildserver" "/nofetch" "/showvariable" "AssemblySemVer"
-          $env:GITHUB_OUTPUT = "version=$gitversion"; 
+      # - name: 🛠️ Compute version with GitVersion
+      #   id: gitversion
+      #   shell: pwsh
+      #   run: |
+      #     dotnet tool install --global GitVersion.Tool --version 5.*
+      #     # echo "## 📦 Calculated version" >> $GITHUB_STEP_SUMMARY
+      #     # echo "" >> $GITHUB_STEP_SUMMARY
+      #     $gitversion = & "dotnet-gitversion.exe" "/updateprojectfiles" "/output" "buildserver" "/nofetch" "/showvariable" "AssemblySemVer"
+      #     $env:GITHUB_OUTPUT = "version=$gitversion"; 
 
       - name: 🎒 Load packages
         run: dotnet restore
