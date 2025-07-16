@@ -9,7 +9,7 @@ public partial class PackagerTests
         // Arrange
         var packager = new Packager();
 
-        Assert.ThrowsExceptionAsync<ArgumentNullException>(() => packager.CreatePackage(null, null, null));
+        Assert.ThrowsExceptionAsync<ArgumentNullException>(() => packager.CreatePackage(null, null, null, null, CancellationToken.None));
     }
 
     [TestMethod]
@@ -18,7 +18,7 @@ public partial class PackagerTests
         // Arrange
         var packager = new Packager();
 
-        Assert.ThrowsExceptionAsync<ArgumentNullException>(() => packager.CreatePackage("test", null, null));
+        Assert.ThrowsExceptionAsync<ArgumentNullException>(() => packager.CreatePackage("test", null, null, null, CancellationToken.None));
     }
 
     [TestMethod]
@@ -27,7 +27,7 @@ public partial class PackagerTests
         // Arrange
         var packager = new Packager();
 
-        Assert.ThrowsExceptionAsync<ArgumentNullException>(() => packager.CreatePackage("test", "test", null));
+        Assert.ThrowsExceptionAsync<ArgumentNullException>(() => packager.CreatePackage("test", "test", null, null, CancellationToken.None));
     }
 
     [TestMethod]
@@ -38,7 +38,7 @@ public partial class PackagerTests
         var inputFolder = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
 
 
-        Assert.ThrowsExceptionAsync<DirectoryNotFoundException>(() => packager.CreatePackage(inputFolder, "test", "test"));
+        Assert.ThrowsExceptionAsync<DirectoryNotFoundException>(() => packager.CreatePackage(inputFolder, "test", "test", null, CancellationToken.None));
     }
 
     [TestMethod]
@@ -50,7 +50,7 @@ public partial class PackagerTests
         Directory.CreateDirectory(inputFolder);
         var setup = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString() + ".msi");
 
-        Assert.ThrowsExceptionAsync<FileNotFoundException>(() => packager.CreatePackage(inputFolder, setup, "test"));
+        Assert.ThrowsExceptionAsync<FileNotFoundException>(() => packager.CreatePackage(inputFolder, setup, "test", null, CancellationToken.None));
         Directory.Delete(inputFolder);
     }
 
@@ -64,7 +64,7 @@ public partial class PackagerTests
         var setup = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString() + ".msi");
         File.CreateText(setup).Close();
 
-        Assert.ThrowsExceptionAsync<ArgumentException>(() => packager.CreatePackage(inputFolder, setup, "test"));
+        Assert.ThrowsExceptionAsync<ArgumentException>(() => packager.CreatePackage(inputFolder, setup, "test", null, CancellationToken.None));
         Directory.Delete(inputFolder, true);
     }
 
@@ -79,7 +79,7 @@ public partial class PackagerTests
         var setup = Path.Combine(inputFolder, Guid.NewGuid().ToString() + ".msi");
         File.CreateText(setup).Close();
 
-        Assert.ThrowsExceptionAsync<DirectoryNotFoundException>(() => packager.CreatePackage(inputFolder, setup, outputFolder));
+        Assert.ThrowsExceptionAsync<DirectoryNotFoundException>(() => packager.CreatePackage(inputFolder, setup, outputFolder, null, CancellationToken.None));
         Directory.Delete(inputFolder, true);
         //Directory.Delete(outputFolder, true);
     }

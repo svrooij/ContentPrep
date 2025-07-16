@@ -24,11 +24,7 @@ public static class TestHelper
         for (int i = 0; i < iterations; i++)
         {
             rnd.NextBytes(data);
-#if NET6_0_OR_GREATER
             await fs.WriteAsync(data, cancellationToken);
-#else
-            await fs.WriteAsync(data, 0, data.Length);
-#endif
         }
         fs.Close();
         return tempFilename;

@@ -104,11 +104,7 @@ public partial class PackagerTests
         var hasher = SHA256.Create();
         using var fs = new FileStream(setupFile, FileMode.Open, FileAccess.Read, FileShare.Read, bufferSize: 8192,
             useAsync: true);
-# if NET6_0_OR_GREATER
         var hash = await hasher.ComputeHashAsync(fs, cts.Token);
-#else
-        var hash = hasher.ComputeHash(fs);
-#endif
         var originalFilesize = new FileInfo(setupFile).Length;
         var packageDirectory = TestHelper.GetTestFolder();
         var outputDirectory = TestHelper.GetTestFolder();
@@ -130,11 +126,7 @@ public partial class PackagerTests
             Assert.AreEqual(originalFilesize, unpackedFilesize, "Original and unpacked setup are not the same size");
             using var outputFs = new FileStream(unpackedSetup, FileMode.Open, FileAccess.Read, FileShare.Read, bufferSize: 8192,
                 useAsync: true);
-#if NET6_0_OR_GREATER
             var outputHash = await hasher.ComputeHashAsync(outputFs, cts.Token);
-#else
-        var outputHash = hasher.ComputeHash(outputFs);
-#endif
             outputHash.Should().BeEquivalentTo(hash, "hashes should match");
         }
         catch (TaskCanceledException)
@@ -162,11 +154,7 @@ public partial class PackagerTests
         var hasher = SHA256.Create();
         using var fs = new FileStream(setupFile, FileMode.Open, FileAccess.Read, FileShare.Read, bufferSize: 8192,
             useAsync: true);
-#if NET6_0_OR_GREATER
         var hash = await hasher.ComputeHashAsync(fs, cts.Token);
-#else
-        var hash = hasher.ComputeHash(fs);
-#endif
 
         var zipFolder = TestHelper.GetTestFolder();
         var zipFilename = Path.Combine(zipFolder, "intunewin.tmp");
@@ -214,11 +202,7 @@ public partial class PackagerTests
             unpackedFilesize.Should().Be(originalFilesize, "the file should exactly match");
             using var outputFs = new FileStream(unpackedSetup, FileMode.Open, FileAccess.Read, FileShare.Read, bufferSize: 4096,
                 useAsync: true);
-#if NET6_0_OR_GREATER
             var outputHash = await hasher.ComputeHashAsync(outputFs, cts.Token);
-#else
-            var outputHash = hasher.ComputeHash(outputFs);
-#endif
             outputHash.Should().BeEquivalentTo(hash, "hashes should match");
         }
         catch (TaskCanceledException)
