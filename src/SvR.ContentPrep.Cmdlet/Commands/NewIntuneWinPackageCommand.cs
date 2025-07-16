@@ -53,7 +53,7 @@ namespace SvR.ContentPrep.Cmdlet
 
         private Packager packager;
         private PowerShellLogger<Packager> logger;
-        private bool forceCorrectFilenames = false;
+        private bool alternativeZipMethod = false;
         private CancellationTokenSource cancellationTokenSource = new CancellationTokenSource();
 
         /// <summary>
@@ -68,8 +68,8 @@ namespace SvR.ContentPrep.Cmdlet
             if (Host.Version != null &&
                 Host.Version.Major <= 5)
             {
-                forceCorrectFilenames = true;
-                WriteVerbose("Detected PowerShell 5 or lower, setting forceCorrectFilenames to true.");
+                alternativeZipMethod = true;
+                WriteVerbose("Detected PowerShell 5 or lower, setting alternativeZipMethod to true.");
             }
         }
 
@@ -111,10 +111,10 @@ namespace SvR.ContentPrep.Cmdlet
                 }
                 WriteVerbose($"Trying to create package for {SetupFile}");
                 ThreadAffinitiveSynchronizationContext.RunSynchronized(async () =>
-                   await packager.CreatePackage(SourcePath, SetupFile, DestinationPath, forceCorrectNames: true, cancellationToken: cancellationTokenSource.Token)
+                   await packager.CreatePackage(SourcePath, SetupFile, DestinationPath, alternativeZipMethod: alternativeZipMethod, cancellationToken: cancellationTokenSource.Token)
                 );
             }
-            catch (System.Exception ex)
+            catch (Exception ex)
             {
                 WriteError(new ErrorRecord(ex, "1", ErrorCategory.InvalidOperation, null));
             }
@@ -127,6 +127,7 @@ namespace SvR.ContentPrep.Cmdlet
         {
             packager = null;
             logger = null;
+            cancellationTokenSource.Dispose();
         }
 
         /// <summary>

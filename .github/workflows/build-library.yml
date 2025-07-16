@@ -63,7 +63,7 @@ jobs:
           REPORTGENERATOR_LICENSE: ${{ secrets.REPORTGENERATOR_LICENSE }}
         run: |
           dotnet tool install --global dotnet-reportgenerator-globaltool --version 5.3.10
-          reportgenerator -reports:${{github.workspace}}/coverage.cobertura.xml -targetdir:${{github.workspace}}/report -reporttypes:MarkdownSummaryGithub -filefilters:-*.g.cs "-classfilters:-WixSharp.*;-WingetIntune.Os.*;-WingetIntune.Internal.MsStore.*" -verbosity:Warning
+          reportgenerator -reports:${{github.workspace}}/coverage.net8.0.cobertura.xml -targetdir:${{github.workspace}}/report -reporttypes:MarkdownSummaryGithub -filefilters:-*.g.cs -verbosity:Warning
           sed -i 's/# Summary/## 📝 Code Coverage/g' ${{github.workspace}}/report/SummaryGithub.md
           sed -i 's/## Coverage/### 📝 Code Coverage details/g' ${{github.workspace}}/report/SummaryGithub.md
           cat ${{github.workspace}}/report/*.md >> $GITHUB_STEP_SUMMARY

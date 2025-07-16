@@ -14,7 +14,7 @@ namespace SvRooij.ContentPrep
           string targetZipFile,
           CompressionLevel compressionLevel,
           bool includeBaseDirectory,
-          bool forceCorrectNames = false)
+          bool alternativeZipMethod = false)
         {
             string directoryName = Path.GetDirectoryName(targetZipFile)!;
             if (!Directory.Exists(directoryName))
@@ -26,7 +26,7 @@ namespace SvRooij.ContentPrep
 
 
 
-            if (!forceCorrectNames)
+            if (!alternativeZipMethod)
             {
                 // This native method to create a zip from a directory works differently on .net framework
                 // all files have directories set with the \ as seperator

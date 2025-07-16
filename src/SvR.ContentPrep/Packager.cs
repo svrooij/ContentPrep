@@ -50,7 +50,7 @@ namespace SvRooij.ContentPrep
           string setupFile,
           string outputFolder,
           ApplicationDetails? applicationDetails = null,
-          CancellationToken cancellationToken = default) => CreatePackage(folder, setupFile, outputFolder, applicationDetails, forceCorrectNames: false, cancellationToken: cancellationToken);
+          CancellationToken cancellationToken = default) => CreatePackage(folder, setupFile, outputFolder,false, applicationDetails, cancellationToken: cancellationToken);
 
         /// <summary>
         /// Creates a package from a setup file
@@ -58,16 +58,16 @@ namespace SvRooij.ContentPrep
         /// <param name="folder">Full path of source folder</param>
         /// <param name="setupFile">Full path of main setup file, in source folder</param>
         /// <param name="outputFolder">Output path to publish the package</param>
+        /// <param name="alternativeZipMethod">On .net framework the zip file is created wrong, set this to true to use an alternative way to create the intunewin zip</param>
         /// <param name="applicationDetails">(optional) Application details, this code does not load this data from the MSI file.</param>
-        /// <param name="forceCorrectNames">On .net framework the zip file is created wrong, set this to true to use an alternative way to create the intunewin zip</param>
         /// <param name="cancellationToken">(optional) Cancellation token</param>
         /// <returns><see cref="ApplicationInfo"/> of the created package</returns>
         public async Task<ApplicationInfo?> CreatePackage(
           string folder,
           string setupFile,
           string outputFolder,
+          bool alternativeZipMethod,
           ApplicationDetails? applicationDetails = null,
-          bool forceCorrectNames = false,
           CancellationToken cancellationToken = default
           )
         {
@@ -118,7 +118,7 @@ namespace SvRooij.ContentPrep
                 }
                 _logger.LogInformation("Generated detection XML file {MetadataFile}", metadataFile);
                 //await Zipper.ZipDirectory(packageFolder, outputFileName, noCompression: true, includeBaseDirectory: true);
-                await Zipper.ZipDirectory(packageFolder, outputFileName, System.IO.Compression.CompressionLevel.NoCompression, includeBaseDirectory: true, forceCorrectNames: forceCorrectNames);
+                await Zipper.ZipDirectory(packageFolder, outputFileName, System.IO.Compression.CompressionLevel.NoCompression, includeBaseDirectory: true, alternativeZipMethod: alternativeZipMethod);
 
                 _logger.LogInformation("Done creating package for {SetupFile} in {Folder} to {OutputFolder}", setupFile, folder, outputFolder);
                 return applicationInfo;
