@@ -50,7 +50,7 @@ namespace SvRooij.ContentPrep
           string setupFile,
           string outputFolder,
           ApplicationDetails? applicationDetails = null,
-          CancellationToken cancellationToken = default) => CreatePackage(folder, setupFile, outputFolder,false, applicationDetails, cancellationToken: cancellationToken);
+          CancellationToken cancellationToken = default) => CreatePackage(folder, setupFile, outputFolder, false, applicationDetails, cancellationToken: cancellationToken);
 
         /// <summary>
         /// Creates a package from a setup file
