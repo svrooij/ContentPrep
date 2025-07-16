@@ -80,10 +80,12 @@ namespace SvR.ContentPrep.Cmdlet
         {
             try
             {
+                SourcePath = SourcePath?.TrimEnd();
                 if (!Path.IsPathRooted(SourcePath))
                 {
                     SourcePath = Path.Combine(Environment.CurrentDirectory, SourcePath);
                 }
+                DestinationPath = DestinationPath?.TrimEnd();
                 if (!Path.IsPathRooted(DestinationPath))
                 {
                     DestinationPath = Path.Combine(Environment.CurrentDirectory, DestinationPath);
@@ -92,6 +94,7 @@ namespace SvR.ContentPrep.Cmdlet
                 if (DestinationPath.StartsWith(SourcePath, StringComparison.OrdinalIgnoreCase))
                     throw new Exception("DestinationPath can't be a subfolder of SourcePath");
 
+                SetupFile = SetupFile?.TrimEnd();
                 if (!Path.IsPathRooted(SetupFile))
                 {
                     SetupFile = Path.Combine(SourcePath, SetupFile);
