@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Management.Automation;
+using System.Threading;
 using SvRooij.ContentPrep;
 namespace SvR.ContentPrep.Cmdlet
 {
@@ -41,10 +42,9 @@ namespace SvR.ContentPrep.Cmdlet
 
         private Packager packager;
         private PowerShellLogger<Packager> logger;
+        private CancellationTokenSource cancellationTokenSource = new CancellationTokenSource();
 
-        /// <summary>
-        /// 
-        /// </summary>
+        /// <inheritdoc/>
         protected override void BeginProcessing()
         {
             WriteVerbose("Begin unlocking package");
@@ -52,15 +52,15 @@ namespace SvR.ContentPrep.Cmdlet
             packager = new Packager(logger);
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
+        /// <inheritdoc/>
         protected override void ProcessRecord()
         {
             try
             {
+                SourceFile = SourceFile?.TrimEnd();
                 if (!Path.IsPathRooted(SourceFile))
                     SourceFile = Path.Combine(Environment.CurrentDirectory, SourceFile);
+                DestinationPath = DestinationPath?.TrimEnd();
                 if (!Path.IsPathRooted(DestinationPath))
                     DestinationPath = Path.Combine(Environment.CurrentDirectory, DestinationPath);
                 if (!File.Exists(SourceFile))
@@ -73,7 +73,7 @@ namespace SvR.ContentPrep.Cmdlet
                     WriteVerbose($"Creating destination folder {DestinationPath}");
                     Directory.CreateDirectory(DestinationPath);
                 }
-                ThreadAffinitiveSynchronizationContext.RunSynchronized(() => packager.Unpack(SourceFile, DestinationPath));
+                ThreadAffinitiveSynchronizationContext.RunSynchronized(() => packager.Unpack(SourceFile, DestinationPath, cancellationToken: cancellationTokenSource.Token));
             }
             catch (System.Exception ex)
             {
@@ -81,13 +81,20 @@ namespace SvR.ContentPrep.Cmdlet
             }
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
+        /// <inheritdoc/>
         protected override void EndProcessing()
         {
             packager = null;
             logger = null;
+            cancellationTokenSource.Dispose();
+        }
+
+        /// <inheritdoc/>
+        protected override void StopProcessing()
+        {
+            cancellationTokenSource.Cancel();
+            WriteVerbose("Stopping processing");
+            base.StopProcessing();
         }
     }
 }

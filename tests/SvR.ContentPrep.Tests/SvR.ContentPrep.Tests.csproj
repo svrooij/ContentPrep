@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
+    <TargetFrameworks>net8.0;net4.7.2</TargetFrameworks>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <DefaultNamespace>SvRooij.ContentPrep.Tests</DefaultNamespace>
@@ -11,6 +11,7 @@
     <FileVersion>0.1.2.0</FileVersion>
     <InformationalVersion>0.1.2-alpha.13+Branch.develop.Sha.820434163de76caaa7316d993ad70211f55c251b</InformationalVersion>
     <Version>0.1.2-alpha0013</Version>
+	  <LangVersion>10.0</LangVersion>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="FluentAssertions" Version="6.12.2" />

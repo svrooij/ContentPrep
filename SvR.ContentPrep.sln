@@ -11,13 +11,16 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{6F02D0D4
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SvR.ContentPrep.Tests", "tests\SvR.ContentPrep.Tests\SvR.ContentPrep.Tests.csproj", "{D90E8B52-F816-43E6-A3D5-0C9E86CD57A2}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "build", "build", "{02EA681E-C7D8-13C7-8484-4AC65E1B71E8}"
+	ProjectSection(SolutionItems) = preProject
+		.github\workflows\build-library.yml = .github\workflows\build-library.yml
+		.github\workflows\build-module.yml = .github\workflows\build-module.yml
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
 		Release|Any CPU = Release|Any CPU
-	EndGlobalSection
-	GlobalSection(SolutionProperties) = preSolution
-		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{F03F8F1F-83B2-4692-9792-3C3DF29EC36B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
@@ -33,7 +36,13 @@ Global
 		{D90E8B52-F816-43E6-A3D5-0C9E86CD57A2}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D90E8B52-F816-43E6-A3D5-0C9E86CD57A2}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{D90E8B52-F816-43E6-A3D5-0C9E86CD57A2} = {6F02D0D4-B300-40A6-9111-CCD20863C7C2}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {B9C47FF4-D51D-43D6-BE7D-0706687F14E4}
 	EndGlobalSection
 EndGlobal

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Management.Automation;
+using System.Threading;
 using SvRooij.ContentPrep;
 namespace SvR.ContentPrep.Cmdlet
 {
@@ -52,6 +53,8 @@ namespace SvR.ContentPrep.Cmdlet
 
         private Packager packager;
         private PowerShellLogger<Packager> logger;
+        private bool alternativeZipMethod = false;
+        private CancellationTokenSource cancellationTokenSource = new CancellationTokenSource();
 
         /// <summary>
         /// 
@@ -61,6 +64,13 @@ namespace SvR.ContentPrep.Cmdlet
             WriteVerbose("Begin creating package");
             logger = new PowerShellLogger<Packager>(this);
             packager = new Packager(logger);
+            // Detect PowerShell version and set ForceCorrectNames if running on 5.1
+            if (Host.Version != null &&
+                Host.Version.Major <= 5)
+            {
+                alternativeZipMethod = true;
+                WriteVerbose("Detected PowerShell 5 or lower, setting alternativeZipMethod to true.");
+            }
         }
 
         /// <summary>
@@ -70,10 +80,12 @@ namespace SvR.ContentPrep.Cmdlet
         {
             try
             {
+                SourcePath = SourcePath?.TrimEnd();
                 if (!Path.IsPathRooted(SourcePath))
                 {
                     SourcePath = Path.Combine(Environment.CurrentDirectory, SourcePath);
                 }
+                DestinationPath = DestinationPath?.TrimEnd();
                 if (!Path.IsPathRooted(DestinationPath))
                 {
                     DestinationPath = Path.Combine(Environment.CurrentDirectory, DestinationPath);
@@ -82,6 +94,7 @@ namespace SvR.ContentPrep.Cmdlet
                 if (DestinationPath.StartsWith(SourcePath, StringComparison.OrdinalIgnoreCase))
                     throw new Exception("DestinationPath can't be a subfolder of SourcePath");
 
+                SetupFile = SetupFile?.TrimEnd();
                 if (!Path.IsPathRooted(SetupFile))
                 {
                     SetupFile = Path.Combine(SourcePath, SetupFile);
@@ -97,11 +110,11 @@ namespace SvR.ContentPrep.Cmdlet
                     Directory.CreateDirectory(DestinationPath);
                 }
                 WriteVerbose($"Trying to create package for {SetupFile}");
-                ThreadAffinitiveSynchronizationContext.RunSynchronized(() =>
-                    packager.CreatePackage(SourcePath, SetupFile, DestinationPath)
+                ThreadAffinitiveSynchronizationContext.RunSynchronized(async () =>
+                   await packager.CreatePackage(SourcePath, SetupFile, DestinationPath, alternativeZipMethod: alternativeZipMethod, cancellationToken: cancellationTokenSource.Token)
                 );
             }
-            catch (System.Exception ex)
+            catch (Exception ex)
             {
                 WriteError(new ErrorRecord(ex, "1", ErrorCategory.InvalidOperation, null));
             }
@@ -114,6 +127,17 @@ namespace SvR.ContentPrep.Cmdlet
         {
             packager = null;
             logger = null;
+            cancellationTokenSource.Dispose();
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        protected override void StopProcessing()
+        {
+            cancellationTokenSource.Cancel();
+            WriteVerbose("Stopping package creation");
+            base.StopProcessing();
         }
     }
 }
