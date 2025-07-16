@@ -2,8 +2,8 @@
     # Script module or binary module file associated with this manifest.
     RootModule = 'SvRooij.ContentPrep.Cmdlet.dll'
 
-    # Version number of this module.
-    ModuleVersion = '0.1.4'
+    # Version number of this module, replaced by GitHub Action with correct tag.
+    ModuleVersion = '0.4.0'
 
     # ID used to uniquely identify this module.
     GUID = 'a9e2730e-2b06-486c-ace6-8425afb6d64f'
@@ -23,7 +23,7 @@
     PowerShellVersion = '5.1'
 
     # Minimum version of the .NET Framework required by this module.
-    # DotNetFrameworkVersion = '4.7.2'
+    DotNetFrameworkVersion = '4.7.2'
 
     # Processor architecture (None, X86, Amd64) supported by this module.
     # ProcessorArchitecture = 'None'
@@ -70,6 +70,8 @@
 
     # List of all files included in this module.
     FileList = @(
+        "Microsoft.Bcl.AsyncInterfaces.dll",
+        "Microsoft.Extensions.DependencyInjection.Abstractions.dll",
         "Microsoft.Extensions.Logging.Abstractions.dll",
         "SvRooij.ContentPrep.Cmdlet.dll",
         "SvRooij.ContentPrep.Cmdlet.dll-Help.xml",
@@ -81,7 +83,8 @@
         "System.Management.Automation.dll",
         "System.Memory.dll",
         "System.Numerics.Vectors.dll",
-        "System.Runtime.CompilerServices.Unsafe.dll"
+        "System.Runtime.CompilerServices.Unsafe.dll",
+        "System.Threading.Tasks.Extensions.dll"
     )
 
     # Private data to pass to the module specified in RootModule/ModuleToProcess.
@@ -91,7 +94,7 @@
 
             LisenceUri = 'https://github.com/svrooij/ContentPrep/blob/main/LICENSE.txt'
             ProjectUri = 'https://github.com/svrooij/ContentPrep/'
-            ReleaseNotes = 'This module is still a work-in-progress. Changes might be made without notice.'
+            ReleaseNotes = 'Check-out https://github.com/svrooij/ContentPrep/releases for the current release notes'
         }
     }
 

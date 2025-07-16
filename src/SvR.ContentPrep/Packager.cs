@@ -18,7 +18,7 @@ namespace SvRooij.ContentPrep
         private readonly ILogger<Packager> _logger;
         internal const string PackageFileExtension = ".intunewin";
         // Version of the latest IntuneWinAppUtil tool
-        internal const string ToolVersion = "1.8.4.0";
+        internal const string ToolVersion = "1.8.6.0";
 
         /// <summary>
         /// Mandatory filename for the encrypted package
@@ -48,7 +48,8 @@ namespace SvRooij.ContentPrep
           string setupFile,
           string outputFolder,
           ApplicationDetails? applicationDetails = null,
-          CancellationToken cancellationToken = default)
+          CancellationToken cancellationToken = default,
+          bool forceCorrectNames = false)
         {
             CheckCreateParamsOrThrow(folder, setupFile, outputFolder);
             _logger.LogInformation("Creating package for {SetupFile} in {Folder} to {OutputFolder}", setupFile, folder, outputFolder);
@@ -62,7 +63,8 @@ namespace SvRooij.ContentPrep
                 string encryptedPackageLocation = Path.Combine(packageContentFolder, EncryptedPackageFileName);
 
                 _logger.LogInformation("Compressing the source folder {Folder} to {EncryptedPackageLocation}", folder, encryptedPackageLocation);
-                await Zipper.ZipDirectory(folder, encryptedPackageLocation, false, false);
+                //await Zipper.ZipDirectory(folder, encryptedPackageLocation, noCompression: false, includeBaseDirectory: false);
+                await Zipper.ZipDirectory(folder, encryptedPackageLocation, System.IO.Compression.CompressionLevel.Fastest, includeBaseDirectory: false);
 
                 long filesizeBeforeEncryption = new FileInfo(encryptedPackageLocation).Length;
                 _logger.LogInformation("Generating application info");
@@ -85,13 +87,19 @@ namespace SvRooij.ContentPrep
                 if (!Directory.Exists(metadataFolder))
                     Directory.CreateDirectory(metadataFolder);
 
-                using (FileStream fileStream = new FileStream(metadataFile, FileMode.Create, FileAccess.Write, FileShare.None, bufferSize: 4096, useAsync: true))
+                using (FileStream fileStream = new FileStream(metadataFile, FileMode.Create, FileAccess.Write, FileShare.Read | FileShare.Delete, bufferSize: 4096, useAsync: true))
                 {
                     byte[] xmlData = Encoding.UTF8.GetBytes(xml);
                     await fileStream.WriteAsync(xmlData, 0, xmlData.Length, cancellationToken);
+                    // Ensure the file is flushed to disk
+                    // might need the be needed on net framework, but not on .net core
+                    await fileStream.FlushAsync(cancellationToken);
+                    fileStream.Close();
                 }
                 _logger.LogInformation("Generated detection XML file {MetadataFile}", metadataFile);
-                await Zipper.ZipDirectory(packageFolder, outputFileName, true, true);
+                //await Zipper.ZipDirectory(packageFolder, outputFileName, noCompression: true, includeBaseDirectory: true);
+                await Zipper.ZipDirectory(packageFolder, outputFileName, System.IO.Compression.CompressionLevel.NoCompression, includeBaseDirectory: true, forceCorrectNames: forceCorrectNames);
+
                 _logger.LogInformation("Done creating package for {SetupFile} in {Folder} to {OutputFolder}", setupFile, folder, outputFolder);
                 return applicationInfo;
             }
@@ -168,8 +176,9 @@ namespace SvRooij.ContentPrep
             string encryptedPackageLocation = Path.Combine(tempFolder, EncryptedPackageFileName);
             try
             {
-                await Zipper.ZipDirectory(folderToPackage, encryptedPackageLocation, false, false);
-                using (FileStream fileStream = new FileStream(encryptedPackageLocation, FileMode.Open, FileAccess.Read, FileShare.None, bufferSize: 4096, useAsync: true))
+                //await Zipper.ZipDirectory(folderToPackage, encryptedPackageLocation, noCompression: false, includeBaseDirectory: false);
+                await Zipper.ZipDirectory(folderToPackage, encryptedPackageLocation, System.IO.Compression.CompressionLevel.NoCompression, includeBaseDirectory: false);
+                using (FileStream fileStream = new FileStream(encryptedPackageLocation, FileMode.Open, FileAccess.Read, FileShare.Read, bufferSize: 4096, useAsync: true))
                 {
                     return await CreateUploadablePackage(fileStream, outputStream, applicationDetails, cancellationToken);
                 }

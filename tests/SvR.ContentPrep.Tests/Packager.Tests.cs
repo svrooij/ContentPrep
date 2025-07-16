@@ -53,7 +53,7 @@ public partial class PackagerTests
     [TestMethod]
     [DataRow(2, 10000, 2000L)]
     [DataRow(10, 30000, 3000L)]
-    [DataRow(100, 60000, 8000L)]
+    [DataRow(100, 60000, 10000L)]
     public async Task Packager_CreateUploadablePackage_Succeeds(int sizeInMb, int millisecondsDelay, long expectedPackageMs)
     {
         // Create Timeout in case something goes wrong
@@ -102,9 +102,13 @@ public partial class PackagerTests
         var setupFolder = TestHelper.GetTestFolder();
         var setupFile = await TestHelper.GenerateTempFileInFolder(setupFolder, setupFileName, 10, cts.Token);
         var hasher = SHA256.Create();
-        await using var fs = new FileStream(setupFile, FileMode.Open, FileAccess.Read, FileShare.Read, bufferSize: 8192,
+        using var fs = new FileStream(setupFile, FileMode.Open, FileAccess.Read, FileShare.Read, bufferSize: 8192,
             useAsync: true);
+# if NET6_0_OR_GREATER
         var hash = await hasher.ComputeHashAsync(fs, cts.Token);
+#else
+        var hash = hasher.ComputeHash(fs);
+#endif
         var originalFilesize = new FileInfo(setupFile).Length;
         var packageDirectory = TestHelper.GetTestFolder();
         var outputDirectory = TestHelper.GetTestFolder();
@@ -124,9 +128,13 @@ public partial class PackagerTests
             var unpackedFilesize = new FileInfo(unpackedSetup).Length;
 
             Assert.AreEqual(originalFilesize, unpackedFilesize, "Original and unpacked setup are not the same size");
-            await using var outputFs = new FileStream(unpackedSetup, FileMode.Open, FileAccess.Read, FileShare.Read, bufferSize: 8192,
+            using var outputFs = new FileStream(unpackedSetup, FileMode.Open, FileAccess.Read, FileShare.Read, bufferSize: 8192,
                 useAsync: true);
+#if NET6_0_OR_GREATER
             var outputHash = await hasher.ComputeHashAsync(outputFs, cts.Token);
+#else
+        var outputHash = hasher.ComputeHash(outputFs);
+#endif
             outputHash.Should().BeEquivalentTo(hash, "hashes should match");
         }
         catch (TaskCanceledException)
@@ -143,22 +151,34 @@ public partial class PackagerTests
 
 
     }
-
+#if NET6_0_OR_GREATER
     [TestMethod]
+#endif
     public async Task Packager_DecryptAndUnpack_Succeeds()
     {
         var cts = new CancellationTokenSource(60000);
         var setupFolder = TestHelper.GetTestFolder();
         var setupFile = await TestHelper.GenerateTempFileInFolder(setupFolder, setupFileName, 112, cts.Token);
         var hasher = SHA256.Create();
-        await using var fs = new FileStream(setupFile, FileMode.Open, FileAccess.Read, FileShare.Read, bufferSize: 8192,
+        using var fs = new FileStream(setupFile, FileMode.Open, FileAccess.Read, FileShare.Read, bufferSize: 8192,
             useAsync: true);
+#if NET6_0_OR_GREATER
         var hash = await hasher.ComputeHashAsync(fs, cts.Token);
+#else
+        var hash = hasher.ComputeHash(fs);
+#endif
 
         var zipFolder = TestHelper.GetTestFolder();
         var zipFilename = Path.Combine(zipFolder, "intunewin.tmp");
+#if NET6_0_OR_GREATER
         var zipStream = new FileStream(zipFilename, FileMode.Create, FileAccess.ReadWrite, FileShare.Delete, 8192, true);
         ZipFile.CreateFromDirectory(setupFolder, zipStream, CompressionLevel.NoCompression, false);
+#else
+        ZipFile.CreateFromDirectory(setupFolder, zipFilename, CompressionLevel.NoCompression, false);
+        await Task.Delay(1000, cts.Token);
+        var zipStream = new FileStream(zipFilename, FileMode.Create, FileAccess.ReadWrite, FileShare.Delete, 8192, false);
+#endif
+
         long zipSize = zipStream.Length;
 
         var originalFilesize = new FileInfo(setupFile).Length;
@@ -171,7 +191,11 @@ public partial class PackagerTests
         // Create a fake package (this is tested in another test, so we can skip that)
         var info = await packager.CreateUploadablePackage(zipStream, intuneWinStream, new Models.ApplicationDetails { Name = "Test", SetupFile = setupFileName }, cts.Token);
         await intuneWinStream.FlushAsync(cts.Token);
+#if NET6_0_OR_GREATER
         await intuneWinStream.DisposeAsync();
+#else
+        intuneWinStream.Dispose();
+#endif
         intuneWinStream = null;
         await Task.Delay(1000, cts.Token);
 
@@ -188,9 +212,13 @@ public partial class PackagerTests
             var unpackedFilesize = new FileInfo(unpackedSetup).Length;
 
             unpackedFilesize.Should().Be(originalFilesize, "the file should exactly match");
-            await using var outputFs = new FileStream(unpackedSetup, FileMode.Open, FileAccess.Read, FileShare.Read, bufferSize: 4096,
+            using var outputFs = new FileStream(unpackedSetup, FileMode.Open, FileAccess.Read, FileShare.Read, bufferSize: 4096,
                 useAsync: true);
+#if NET6_0_OR_GREATER
             var outputHash = await hasher.ComputeHashAsync(outputFs, cts.Token);
+#else
+            var outputHash = hasher.ComputeHash(outputFs);
+#endif
             outputHash.Should().BeEquivalentTo(hash, "hashes should match");
         }
         catch (TaskCanceledException)

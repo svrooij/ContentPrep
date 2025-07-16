@@ -144,31 +144,38 @@ namespace SvRooij.ContentPrep
             // At this point the targetStream will contain the empty hash (32 bytes) and the IV (16 bytes)
             using (ICryptoTransform cryptoTransform = aes.CreateEncryptor(encryptionKey, initializationVector))
             // Create a CryptoStream to write the encrypted data to the targetStream
-#if NET8_0_OR_GREATER
+#if NET6_0_OR_GREATER
             using (CryptoStream cryptoStream = new CryptoStream(targetStream, cryptoTransform, CryptoStreamMode.Write, leaveOpen: true))
             {
+                // Copy the sourceStream to the cryptoStream
+                cancellationToken.ThrowIfCancellationRequested();
+                await sourceStream.CopyToAsync(cryptoStream, DefaultBufferSize, cancellationToken);
+                await cryptoStream.FlushFinalBlockAsync(cancellationToken);
+                await cryptoStream.FlushAsync(cancellationToken);
+                await targetStream.FlushAsync(cancellationToken);
+            }
 #else
             using (CryptoStream cryptoStream = new CryptoStream(targetStream, cryptoTransform, CryptoStreamMode.Write))
             {
                 // Set the leaveOpen property of the CryptoStream to true
                 // Hack found at https://stackoverflow.com/a/50878853
                 // This property seems not available in the .NET Standard 2.0 version of CryptoStream
+                //As of .NET 4.7.2, there is a second constructor with an added bool parameter called leaveOpen.
+                //If this is set to true then the CryptoStream's dispose method will not call dispose on the underlying stream.
                 var prop = cryptoStream.GetType().GetField("_leaveOpen", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
                 prop?.SetValue(cryptoStream, true);
-#endif
 
                 // Copy the sourceStream to the cryptoStream
                 cancellationToken.ThrowIfCancellationRequested();
                 await sourceStream.CopyToAsync(cryptoStream, DefaultBufferSize, cancellationToken);
-#if NET6_0_OR_GREATER
-                await cryptoStream.FlushFinalBlockAsync(cancellationToken);
-#else
+
                 cryptoStream.FlushFinalBlock();
-#endif
-                // not sure if this is needed, but because we want to keep the stream open, it's better to flush anyway.
+
                 await cryptoStream.FlushAsync(cancellationToken);
                 await targetStream.FlushAsync(cancellationToken);
             }
+#endif
+
             cancellationToken.ThrowIfCancellationRequested();
 
             // Rewind the targetStream to the exact position where the IV should be written

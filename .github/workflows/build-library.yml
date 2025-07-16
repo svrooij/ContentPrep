@@ -53,10 +53,10 @@ jobs:
 
       - name: 🛠️ Build code
         run: |
-          dotnet build --configuration Release --no-restore ./src/SvR.ContentPrep/SvR.ContentPrep.csproj
+          dotnet build --configuration Release --framework net8.0 --no-restore ./src/SvR.ContentPrep/SvR.ContentPrep.csproj
 
       - name: ✔️ Testing code
-        run: dotnet test --configuration Release -v minimal --no-restore --logger GitHubActions '/p:CollectCoverage=true;CoverletOutputFormat="json,lcov,cobertura";MergeWith=${{github.workspace}}/coverage.json;CoverletOutput=${{github.workspace}}/coverage' -- RunConfiguration.CollectSourceInformation=true
+        run: dotnet test --configuration Release -v minimal --no-restore --framework net8.0 --logger GitHubActions '/p:CollectCoverage=true;CoverletOutputFormat="json,lcov,cobertura";MergeWith=${{github.workspace}}/coverage.json;CoverletOutput=${{github.workspace}}/coverage' -- RunConfiguration.CollectSourceInformation=true
 
       - name: 📝 Code Coverage report
         env:
