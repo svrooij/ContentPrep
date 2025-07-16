@@ -25,7 +25,7 @@ namespace SvRooij.ContentPrep
                 num += file.Length;
 
 
- 
+
             if (!forceCorrectNames)
             {
                 // This native method to create a zip from a directory works differently on .net framework
@@ -36,7 +36,7 @@ namespace SvRooij.ContentPrep
             else
             {
                 string baseDirectory = includeBaseDirectory ? Path.GetDirectoryName(directory)! : directory;
-                
+
                 using (var archive = ZipFile.Open(targetZipFile, ZipArchiveMode.Create, System.Text.Encoding.UTF8))
                 {
                     foreach (FileInfo file in directoryInfo.GetFiles("*", SearchOption.AllDirectories))

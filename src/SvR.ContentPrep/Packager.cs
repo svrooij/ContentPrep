@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using SvRooij.ContentPrep.Models;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
+using System.ComponentModel;
 
 namespace SvRooij.ContentPrep
 {
@@ -41,15 +42,34 @@ namespace SvRooij.ContentPrep
         /// <param name="setupFile">Full path of main setup file, in source folder</param>
         /// <param name="outputFolder">Output path to publish the package</param>
         /// <param name="applicationDetails">(optional) Application details, this code does not load this data from the MSI file.</param>
-        /// <param name="cancellationToken">(optiona) Cancellation token</param>
+        /// <param name="cancellationToken">(optional) Cancellation token</param>
+        /// <returns><see cref="ApplicationInfo"/> of the created package</returns>
+        [EditorBrowsable(EditorBrowsableState.Never)] // Hide this method from the editor, use the other overload instead
+        public Task<ApplicationInfo?> CreatePackage(
+          string folder,
+          string setupFile,
+          string outputFolder,
+          ApplicationDetails? applicationDetails = null,
+          CancellationToken cancellationToken = default) => CreatePackage(folder, setupFile, outputFolder, applicationDetails, forceCorrectNames: false, cancellationToken: cancellationToken);
+
+        /// <summary>
+        /// Creates a package from a setup file
+        /// </summary>
+        /// <param name="folder">Full path of source folder</param>
+        /// <param name="setupFile">Full path of main setup file, in source folder</param>
+        /// <param name="outputFolder">Output path to publish the package</param>
+        /// <param name="applicationDetails">(optional) Application details, this code does not load this data from the MSI file.</param>
+        /// <param name="forceCorrectNames">On .net framework the zip file is created wrong, set this to true to use an alternative way to create the intunewin zip</param>
+        /// <param name="cancellationToken">(optional) Cancellation token</param>
         /// <returns><see cref="ApplicationInfo"/> of the created package</returns>
         public async Task<ApplicationInfo?> CreatePackage(
           string folder,
           string setupFile,
           string outputFolder,
           ApplicationDetails? applicationDetails = null,
-          CancellationToken cancellationToken = default,
-          bool forceCorrectNames = false)
+          bool forceCorrectNames = false,
+          CancellationToken cancellationToken = default
+          )
         {
             CheckCreateParamsOrThrow(folder, setupFile, outputFolder);
             _logger.LogInformation("Creating package for {SetupFile} in {Folder} to {OutputFolder}", setupFile, folder, outputFolder);

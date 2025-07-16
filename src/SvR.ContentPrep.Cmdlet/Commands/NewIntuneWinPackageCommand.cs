@@ -66,7 +66,7 @@ namespace SvR.ContentPrep.Cmdlet
             packager = new Packager(logger);
             // Detect PowerShell version and set ForceCorrectNames if running on 5.1
             if (Host.Version != null &&
-                Host.Version.Major <=5)
+                Host.Version.Major <= 5)
             {
                 forceCorrectFilenames = true;
                 WriteVerbose("Detected PowerShell 5 or lower, setting forceCorrectFilenames to true.");
