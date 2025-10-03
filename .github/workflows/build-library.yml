@@ -129,7 +129,11 @@ jobs:
       shell: pwsh
       run: dotnet pack ./src/SvR.ContentPrep/SvR.ContentPrep.csproj --configuration Release --no-build -p:Version=$("${{ github.ref_name }}".Substring(1))
 
+    - name: 🔑 Nuget trusted publishing
+      uses: NuGet/login@v1
+      id: nuget_login
+      with:
+        user: svrooij
+
     - name: ✈️ Publish SvR.ContentPrep to nuget.org
-      run: dotnet nuget push ./src/SvR.ContentPrep/bin/Release/SvRooij.ContentPrep.*.nupkg -k $NUGET_AUTH_TOKEN -s https://api.nuget.org/v3/index.json
-      env:
-        NUGET_AUTH_TOKEN: ${{ secrets.NUGET_TOKEN }}
+      run: dotnet nuget push ./src/SvR.ContentPrep/bin/Release/SvRooij.ContentPrep.*.nupkg --api-key ${{steps.nuget_login.outputs.NUGET_API_KEY}} -s https://api.nuget.org/v3/index.json
