@@ -85,6 +85,9 @@ jobs:
         run: dotnet format --verify-no-changes
 
   publish:
+    permissions:
+      id-token: write # Enables OIDC token generation
+
     name: 📦 Publish nuget library
     runs-on: ubuntu-latest
     if: startsWith(github.ref, 'refs/tags/')
