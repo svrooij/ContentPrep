@@ -14,7 +14,7 @@ namespace SvRooij.ContentPrep
     /// <summary>
     /// Main entry point for the ContentPrep library
     /// </summary>
-    public class Packager
+    public partial class Packager
     {
         private readonly ILogger<Packager> _logger;
         internal const string PackageFileExtension = ".intunewin";
@@ -72,7 +72,7 @@ namespace SvRooij.ContentPrep
           )
         {
             CheckCreateParamsOrThrow(folder, setupFile, outputFolder);
-            _logger.LogInformation("Creating package for {SetupFile} in {Folder} to {OutputFolder}", setupFile, folder, outputFolder);
+            LogCreatingPackage(setupFile, folder, outputFolder);
             string tempFolder = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
             string outputFileName = GetOutputFileName(setupFile, outputFolder);
             try
@@ -82,12 +82,12 @@ namespace SvRooij.ContentPrep
                 string packageContentFolder = Path.Combine(packageFolder, "Contents");
                 string encryptedPackageLocation = Path.Combine(packageContentFolder, EncryptedPackageFileName);
 
-                _logger.LogInformation("Compressing the source folder {Folder} to {EncryptedPackageLocation}", folder, encryptedPackageLocation);
+                LogCompressingSourceFolder(folder, encryptedPackageLocation);
                 //await Zipper.ZipDirectory(folder, encryptedPackageLocation, noCompression: false, includeBaseDirectory: false);
                 await Zipper.ZipDirectory(folder, encryptedPackageLocation, System.IO.Compression.CompressionLevel.Fastest, includeBaseDirectory: false);
 
                 long filesizeBeforeEncryption = new FileInfo(encryptedPackageLocation).Length;
-                _logger.LogInformation("Generating application info");
+                LogGeneratingApplicationInfo();
                 // TODO: Add support for reading info from MSI files, but has to be cross platform
                 ApplicationInfo applicationInfo = applicationDetails?.MsiInfo != null
                     ? new MsiApplicationInfo() { MsiInfo = applicationDetails.MsiInfo }
@@ -97,12 +97,11 @@ namespace SvRooij.ContentPrep
                 applicationInfo.UnencryptedContentSize = filesizeBeforeEncryption;
                 applicationInfo.ToolVersion = ToolVersion;
                 applicationInfo.SetupFile = setupFile.Substring(folder.Length).TrimStart(Path.DirectorySeparatorChar);
-                _logger.LogDebug("Application info: {@ApplicationInfo}", applicationInfo);
-                _logger.LogInformation("Encrypting file {EncryptedPackageLocation}", encryptedPackageLocation);
+                LogApplicationInfoAndEncryptingFile(applicationInfo, encryptedPackageLocation);
                 applicationInfo.EncryptionInfo = await Encryptor.EncryptFileAsync(encryptedPackageLocation, cancellationToken);
                 string metadataFolder = Path.Combine(packageFolder, "Metadata");
                 string metadataFile = Path.Combine(metadataFolder, "Detection.xml");
-                _logger.LogDebug("Generating detection XML file {MetadataFile}", metadataFile);
+                LogGeneratingDetectionXmlFile(metadataFile);
                 string xml = applicationInfo.ToXml();
                 if (!Directory.Exists(metadataFolder))
                     Directory.CreateDirectory(metadataFolder);
@@ -116,16 +115,16 @@ namespace SvRooij.ContentPrep
                     await fileStream.FlushAsync(cancellationToken);
                     fileStream.Close();
                 }
-                _logger.LogInformation("Generated detection XML file {MetadataFile}", metadataFile);
+                LogGeneratedDetectionXmlFile(metadataFile);
                 //await Zipper.ZipDirectory(packageFolder, outputFileName, noCompression: true, includeBaseDirectory: true);
                 await Zipper.ZipDirectory(packageFolder, outputFileName, System.IO.Compression.CompressionLevel.NoCompression, includeBaseDirectory: true, alternativeZipMethod: alternativeZipMethod);
 
-                _logger.LogInformation("Done creating package for {SetupFile} in {Folder} to {OutputFolder}", setupFile, folder, outputFolder);
+                LogCreatedPackage(setupFile, folder, outputFolder);
                 return applicationInfo;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error creating package for {SetupFile} in {Folder} to {OutputFolder}", setupFile, folder, outputFolder);
+                LogErrorCreatingPackage(ex, setupFile, folder, outputFolder);
                 throw;
             }
             finally
@@ -136,15 +135,15 @@ namespace SvRooij.ContentPrep
                 {
                     if (Directory.Exists(tempFolder))
                     {
-                        _logger.LogDebug("Removing temporary files");
+                        LogRemovingTemporaryFiles();
                         Directory.Delete(tempFolder, true);
-                        _logger.LogDebug("Removed temporary files");
+                        LogRemovedTemporaryFiles();
                     }
 
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogWarning(ex, "Error removing temporary files");
+                    LogErrorRemovingTemporaryFiles(ex);
                 }
             }
         }
@@ -223,20 +222,20 @@ namespace SvRooij.ContentPrep
             CancellationToken cancellationToken = default)
         {
             CheckUnpackParamsOrThrow(packageFile, outputFolder);
-            _logger.LogInformation("Unpacking intunewin at {PackageFile} to {OutputFolder}", packageFile, outputFolder);
+            LogUnpackingIntunewin(packageFile, outputFolder);
             string tempFolder = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
             try
             {
                 // Unzip file packageFile to tempFolder
-                _logger.LogDebug("Unzipping {PackageFile} to {TempFolder}", packageFile, tempFolder);
+                LogUnzippingPackage(packageFile, tempFolder);
                 using (FileStream fileStream = new FileStream(packageFile, FileMode.Open, FileAccess.Read, FileShare.None, bufferSize: 4096, useAsync: true))
                 {
                     await Zipper.UnzipStreamAsync(fileStream, tempFolder, cancellationToken);
                 }
-                _logger.LogDebug("Unzipped {PackageFile} to {TempFolder}", packageFile, tempFolder);
+                LogUnzippedPackage(packageFile, tempFolder);
                 // Read metadata file
                 var metadataFile = Path.Combine(tempFolder, "IntuneWinPackage", "Metadata", "Detection.xml");
-                _logger.LogDebug("Reading metadata file {MetadataFile}", metadataFile);
+                LogReadingMetadataFile(metadataFile);
 
                 ApplicationInfo? applicationInfo;
                 using (FileStream metadataStream = new FileStream(metadataFile, FileMode.Open, FileAccess.Read, FileShare.None, bufferSize: 4096, useAsync: true))
@@ -252,14 +251,14 @@ namespace SvRooij.ContentPrep
 
                 // Decrypt file
                 var encryptedPackage = Path.Combine(tempFolder, "IntuneWinPackage", "Contents", applicationInfo.FileName!);
-                _logger.LogDebug("Decrypting {EncryptedPackage} to {OutputFolder}", encryptedPackage, outputFolder);
+                LogDecryptingPackage(encryptedPackage, outputFolder);
                 using (FileStream encryptedFileStream = new FileStream(encryptedPackage, FileMode.Open, FileAccess.Read, FileShare.None, bufferSize: Encryptor.DefaultBufferSize, useAsync: true))
                 using (Stream decryptedStream = await Encryptor.DecryptStreamAsync(encryptedFileStream, applicationInfo.EncryptionInfo.EncryptionKey!, applicationInfo.EncryptionInfo.MacKey!, cancellationToken))
                 {
                     await Zipper.UnzipStreamAsync(decryptedStream, outputFolder, cancellationToken);
                     decryptedStream.Close();
                     encryptedFileStream.Close();
-                    _logger.LogInformation("Unpacked intunewin at {PackageFile} to {OutputFolder}", packageFile, outputFolder);
+                    LogUnpackedIntunewin(packageFile, outputFolder);
                 }
 
                 Directory.Delete(tempFolder, true);
@@ -269,7 +268,7 @@ namespace SvRooij.ContentPrep
             }
             catch (Exception ex)
             {
-                _logger.LogWarning(ex, "Error unpacking intunewin at {PackageFile} to {OutputFolder}", packageFile, outputFolder);
+                LogErrorUnpackingIntunewin(ex, packageFile, outputFolder);
                 throw;
             }
         }
@@ -297,7 +296,7 @@ namespace SvRooij.ContentPrep
                 throw new ArgumentException("Stream can not be read or seeked in", nameof(encryptedStream));
             if (encryptedStream.Length < 49)
                 throw new InvalidDataException("Stream is too short to contain a valid encryption header");
-            _logger.LogDebug("Decrypting stream to {OutputFolder}", outputFolder);
+            LogDecryptingStream(outputFolder);
 
             long streamLength = encryptedStream.Length;
 
@@ -307,13 +306,13 @@ namespace SvRooij.ContentPrep
                 {
                     await Zipper.UnzipStreamAsync(decryptedStream, outputFolder, cancellationToken);
                     //decryptedStream.Close();
-                    _logger.LogInformation("Unpacked stream of size {StreamSize} to {OutputFolder}", streamLength, outputFolder);
+                    LogUnpackedStream(streamLength, outputFolder);
                 }
                 return true;
             }
             catch (Exception ex)
             {
-                _logger.LogWarning(ex, "Error decrypting stream to folder {OutputFolder}", outputFolder);
+                LogErrorDecryptingStream(ex, outputFolder);
                 throw;
             }
         }
@@ -371,5 +370,68 @@ namespace SvRooij.ContentPrep
                 throw new FileNotFoundException(string.Format(CultureInfo.InvariantCulture, "File '{0}' can not be found", packageFile));
             TryWritingToFolder(outputFolder);
         }
+
+        [LoggerMessage(EventId = 1, Level = LogLevel.Error, Message = "Error creating package for {SetupFile} in {Folder} to {OutputFolder}")]
+        partial void LogErrorCreatingPackage(Exception ex, string setupFile, string folder, string outputFolder);
+
+        [LoggerMessage(EventId = 2, Level = LogLevel.Warning, Message = "Error decrypting stream to folder {OutputFolder}")]
+        partial void LogErrorDecryptingStream(Exception ex, string outputFolder);
+
+        [LoggerMessage(EventId = 3, Level = LogLevel.Warning, Message = "Error removing temporary files")]
+        partial void LogErrorRemovingTemporaryFiles(Exception ex);
+
+        [LoggerMessage(EventId = 4, Level = LogLevel.Warning, Message = "Error unpacking intunewin at {PackageFile} to {OutputFolder}")]
+        partial void LogErrorUnpackingIntunewin(Exception ex, string packageFile, string outputFolder);
+
+        [LoggerMessage(EventId = 100, Level = LogLevel.Information, Message = "Created package for {SetupFile} in {Folder} to {OutputFolder}")]
+        partial void LogCreatedPackage(string setupFile, string folder, string outputFolder);
+
+        [LoggerMessage(EventId = 101, Level = LogLevel.Information, Message = "Unpacked intunewin at {PackageFile} to {OutputFolder}")]
+        partial void LogUnpackedIntunewin(string packageFile, string outputFolder);
+
+        [LoggerMessage(EventId = 102, Level = LogLevel.Information, Message = "Unpacked stream of size {StreamSize} to {OutputFolder}")]
+        partial void LogUnpackedStream(long streamSize, string outputFolder);
+
+        [LoggerMessage(EventId = 200, Level = LogLevel.Debug, Message = "Application info: {@ApplicationInfo}, Encrypting file {EncryptedPackageLocation}")]
+        partial void LogApplicationInfoAndEncryptingFile(ApplicationInfo applicationInfo, string encryptedPackageLocation);
+
+        [LoggerMessage(EventId = 201, Level = LogLevel.Debug, Message = "Compressing the source folder {Folder} to {EncryptedPackageLocation}")]
+        partial void LogCompressingSourceFolder(string folder, string encryptedPackageLocation);
+
+        [LoggerMessage(EventId = 202, Level = LogLevel.Debug, Message = "Creating package for {SetupFile} in {Folder} to {OutputFolder}")]
+        partial void LogCreatingPackage(string setupFile, string folder, string outputFolder);
+
+        [LoggerMessage(EventId = 203, Level = LogLevel.Debug, Message = "Decrypting {EncryptedPackage} to {OutputFolder}")]
+        partial void LogDecryptingPackage(string encryptedPackage, string outputFolder);
+
+        [LoggerMessage(EventId = 204, Level = LogLevel.Debug, Message = "Decrypting stream to {OutputFolder}")]
+        partial void LogDecryptingStream(string outputFolder);
+
+        [LoggerMessage(EventId = 205, Level = LogLevel.Debug, Message = "Generated detection XML file {MetadataFile}")]
+        partial void LogGeneratedDetectionXmlFile(string metadataFile);
+
+        [LoggerMessage(EventId = 206, Level = LogLevel.Debug, Message = "Generating application info")]
+        partial void LogGeneratingApplicationInfo();
+
+        [LoggerMessage(EventId = 207, Level = LogLevel.Debug, Message = "Generating detection XML file {MetadataFile}")]
+        partial void LogGeneratingDetectionXmlFile(string metadataFile);
+
+        [LoggerMessage(EventId = 208, Level = LogLevel.Debug, Message = "Reading metadata file {MetadataFile}")]
+        partial void LogReadingMetadataFile(string metadataFile);
+
+        [LoggerMessage(EventId = 209, Level = LogLevel.Debug, Message = "Removed temporary files")]
+        partial void LogRemovedTemporaryFiles();
+
+        [LoggerMessage(EventId = 210, Level = LogLevel.Debug, Message = "Removing temporary files")]
+        partial void LogRemovingTemporaryFiles();
+
+        [LoggerMessage(EventId = 211, Level = LogLevel.Debug, Message = "Unpacking intunewin at {PackageFile} to {OutputFolder}")]
+        partial void LogUnpackingIntunewin(string packageFile, string outputFolder);
+
+        [LoggerMessage(EventId = 212, Level = LogLevel.Debug, Message = "Unzipped {PackageFile} to {TempFolder}")]
+        partial void LogUnzippedPackage(string packageFile, string tempFolder);
+
+        [LoggerMessage(EventId = 213, Level = LogLevel.Debug, Message = "Unzipping {PackageFile} to {TempFolder}")]
+        partial void LogUnzippingPackage(string packageFile, string tempFolder);
     }
 }
